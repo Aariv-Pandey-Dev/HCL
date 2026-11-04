@@ -6,12 +6,12 @@
 window.GT_CONFIG = {
   // Step 3 of the guide: Firebase console → Project settings → Your apps → Web app → "Config"
   firebase: {
-    apiKey: "PASTE_API_KEY",
-    authDomain: "PASTE_PROJECT_ID.firebaseapp.com",
-    projectId: "PASTE_PROJECT_ID",
-    storageBucket: "PASTE_PROJECT_ID.firebasestorage.app",
-    messagingSenderId: "PASTE_SENDER_ID",
-    appId: "PASTE_APP_ID"
+    apiKey: "AIzaSyDa-9NiLcRT1PyYFsvdbP60u4KvxhzVAD",
+    authDomain: "hcl-grocery-tracker.firebaseapp.com",
+    projectId: "hcl-grocery-tracker",
+    storageBucket: "hcl-grocery-tracker.firebasestorage.app",
+    messagingSenderId: "877707169019",
+    appId: "1:877707169019:web:37cc78512b64de5741f45e"
   },
 
   // The Gemini model the AI assistant uses. gemini-3.5-flash is stable until at least May 2027.
