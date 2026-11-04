@@ -1,0 +1,70 @@
+{
+  "id": "./",
+  "name": "Grocery Tracker",
+  "short_name": "Groceries",
+  "description": "Track groceries, catch expiry dates and cut food waste. The AI adds online grocery orders automatically.",
+  "start_url": "./?source=app",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EDF2F0",
+  "theme_color": "#EDF2F0",
+  "categories": [
+    "food",
+    "lifestyle",
+    "productivity"
+  ],
+  "lang": "en-IN",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "share_target": {
+    "action": "./",
+    "method": "GET",
+    "params": {
+      "title": "shared_title",
+      "text": "shared_text",
+      "url": "shared_url"
+    }
+  },
+  "screenshots": [
+    {
+      "src": "shot-1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Colour-coded expiry list"
+    },
+    {
+      "src": "shot-2.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Grocery orders added automatically"
+    },
+    {
+      "src": "shot-3.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Recipes from what you have"
+    }
+  ]
+}

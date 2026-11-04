@@ -1,0 +1,1555 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Track groceries, catch expiry dates and cut food waste. The AI adds online grocery orders automatically.">
+<meta name="theme-color" content="#EDF2F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121816" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Grocery Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&display=swap">
+<style>
+/*
+  Grocery Tracker — "inside the fridge".
+  Cool fridge-liner background, white shelves, ink line drawings with one soft tint.
+  Colour is kept for meaning: red/orange/yellow/green stickers say how soon food needs using. Jamun purple marks actions.
+  One typeface (Bricolage Grotesque): narrow and bold for titles and numbers, like a printed food label.
+*/
+:root{
+  --bg:#EDF2F0; --paper:#FFFFFF; --sunk:#E2E9E6; --line:#D2DCD8; --line-strong:#A7B5B0;
+  --ink:#1A2421; --muted:#53625D; --faint:#7B8984;
+  --accent:#6E2C63; --on-accent:#FFFFFF; --accent-soft:#F2E4EF; --on-accent-soft:#4A1A42;
+  --draw:#1A2421; --draw-fill:#E6DCE4; --draw-paper:#FFFFFF;
+  --snack:#1A2421; --on-snack:#EDF2F0; --snack-action:#E9BCE0;
+  --exp:#B3261E; --exp-bg:#FBE9E6; --exp-solid:#DB3A2C; --exp-on:#FFFFFF;
+  --week:#994700; --week-bg:#FDEEE0; --week-solid:#F0801A; --week-on:#2A1400;
+  --month:#765300; --month-bg:#FDF3D8; --month-solid:#F4B92A; --month-on:#261A00;
+  --fresh:#1D6B36; --fresh-bg:#E3F2E8; --fresh-solid:#2F8F4E; --fresh-on:#FFFFFF;
+  --none:#53625D; --none-fill:#FFFFFF;
+  --scrim:rgba(14,22,20,.42);
+  --f:"Bricolage Grotesque",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --nav:68px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#121816; --paper:#1B2320; --sunk:#232C29; --line:#2C3733; --line-strong:#4B5A55;
+    --ink:#E3EBE8; --muted:#A3B1AC; --faint:#7D8B86;
+    --accent:#E3B2D8; --on-accent:#3A1233; --accent-soft:#3A2636; --on-accent-soft:#F6DFF0;
+    --draw:#DCE5E2; --draw-fill:#3B2D38; --draw-paper:#1B2320;
+    --snack:#E3EBE8; --on-snack:#1A2421; --snack-action:#6E2C63;
+    --exp:#F4A9A2; --exp-bg:#3A1C19; --exp-solid:#F0796E; --exp-on:#3A0B07;
+    --week:#F8C08F; --week-bg:#382614; --week-solid:#F7A55C; --week-on:#331800;
+    --month:#F6D98A; --month-bg:#342C12; --month-solid:#F6CD5E; --month-on:#2E2300;
+    --fresh:#8FD3A6; --fresh-bg:#16301F; --fresh-solid:#6CC48A; --fresh-on:#062411;
+    --none:#A3B1AC; --none-fill:#121816;
+    --scrim:rgba(0,0,0,.6);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121816; --paper:#1B2320; --sunk:#232C29; --line:#2C3733; --line-strong:#4B5A55;
+  --ink:#E3EBE8; --muted:#A3B1AC; --faint:#7D8B86;
+  --accent:#E3B2D8; --on-accent:#3A1233; --accent-soft:#3A2636; --on-accent-soft:#F6DFF0;
+  --draw:#DCE5E2; --draw-fill:#3B2D38; --draw-paper:#1B2320;
+  --snack:#E3EBE8; --on-snack:#1A2421; --snack-action:#6E2C63;
+  --exp:#F4A9A2; --exp-bg:#3A1C19; --exp-solid:#F0796E; --exp-on:#3A0B07;
+  --week:#F8C08F; --week-bg:#382614; --week-solid:#F7A55C; --week-on:#331800;
+  --month:#F6D98A; --month-bg:#342C12; --month-solid:#F6CD5E; --month-on:#2E2300;
+  --fresh:#8FD3A6; --fresh-bg:#16301F; --fresh-solid:#6CC48A; --fresh-on:#062411;
+  --none:#A3B1AC; --none-fill:#121816;
+  --scrim:rgba(0,0,0,.6);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f);font-size:16px;line-height:24px;font-optical-sizing:auto;-webkit-tap-highlight-color:transparent;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+button{cursor:pointer;background:none;border:0;padding:0;text-align:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+h1,h2,h3,p{margin:0}
+h1{font-size:30px;line-height:34px;font-weight:720;font-variation-settings:"wdth" 80;letter-spacing:-.2px}
+h2{font-size:22px;line-height:28px;font-weight:660;font-variation-settings:"wdth" 86}
+h3{font-size:16px;line-height:22px;font-weight:620}
+.ic{width:22px;height:22px;flex:none;display:block}
+.app{max-width:36rem;margin:0 auto}
+.gut{--gl:max(18px,env(safe-area-inset-left,0px));--gr:max(18px,env(safe-area-inset-right,0px));padding-left:var(--gl);padding-right:var(--gr)}
+.muted{color:var(--muted)}
+.small{font-size:14px;line-height:20px}
+
+/* header */
+.bar-top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);min-height:68px;padding-block:14px 10px;display:flex;align-items:center;gap:10px}
+.bar-top h1{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.plan-tag{font-size:13px;line-height:18px;font-weight:650;color:var(--on-accent);background:var(--accent);border-radius:6px;padding:2px 8px;transform:rotate(-3deg)}
+.add-btn{height:40px;padding:0 14px 0 10px;border-radius:12px;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line-strong);display:inline-flex;align-items:center;gap:6px;font-size:15px;font-weight:620;color:var(--ink)}
+.add-btn .ic{width:20px;height:20px}
+main{padding-block:0 calc(var(--nav) + 40px + env(safe-area-inset-bottom,0px))}
+
+/* drawings */
+.draw .ln{fill:none;stroke:var(--draw);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.draw .tf{fill:var(--draw-fill)}
+.draw .pp{fill:var(--draw-paper)}
+.draw .dot{fill:var(--draw)}
+.draw .sk{fill:var(--sunk)}
+.draw text{font-family:var(--f);font-size:11px;font-weight:650;fill:var(--muted)}
+.art{width:48px;height:48px;flex:none;border-radius:14px;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line);display:grid;place-items:center}
+.art svg{width:36px;height:36px;display:block}
+
+/* fridge summary */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) 146px;gap:8px 18px;align-items:end;padding:6px 0 18px}
+.hero .fridge{width:146px;height:auto;display:block}
+.hero-t{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding-bottom:6px}
+.hero .big{font-size:76px;line-height:68px;font-weight:760;font-variation-settings:"wdth" 75;letter-spacing:-1.5px;font-variant-numeric:tabular-nums}
+.hero .big.b-expired{color:var(--exp)}
+.hero .lead{font-size:18px;line-height:24px;font-weight:560;max-width:12ch}
+.hero .btn{margin-top:12px}
+.tally{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 16px;padding-top:14px;border-top:1px solid var(--line);font-size:14px;line-height:20px;color:var(--muted)}
+.tally b{font-weight:650;color:var(--ink);font-variant-numeric:tabular-nums}
+.note{font-size:14px;line-height:20px;color:var(--muted)}
+
+/* colour key filters */
+.keys{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 calc(-1 * var(--gr)) 0 calc(-1 * var(--gl));padding:2px var(--gr) 2px var(--gl)}
+.keys::-webkit-scrollbar{display:none}
+.key{flex:none;height:36px;display:inline-flex;align-items:center;gap:7px;padding:0 12px 0 10px;border-radius:10px;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line);font-size:14px;line-height:20px;font-weight:560;white-space:nowrap}
+.key .shp{width:16px;height:16px;flex:none;overflow:visible}
+.key .n{color:var(--faint);font-variant-numeric:tabular-nums}
+.key.on{background:var(--ink);color:var(--bg);box-shadow:none}
+.key.on .n{color:var(--bg);opacity:.7}
+.key.k-all{padding-left:12px}
+.tools{display:flex;flex-direction:column;gap:12px;padding-bottom:4px}
+
+/* search */
+.search{display:flex;align-items:center;gap:10px;height:44px;border-radius:12px;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line);padding:0 14px;color:var(--faint)}
+.search .ic{width:20px;height:20px}
+.search input{flex:1;min-width:0;border:0;background:none;height:100%;font-size:16px;color:var(--ink);outline:none;padding:0}
+.search input::placeholder{color:var(--faint)}
+.search:focus-within{box-shadow:inset 0 0 0 2px var(--accent)}
+
+/* sections & lists */
+.sec-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:28px;padding-bottom:6px;font-size:15px;line-height:20px;font-weight:650;color:var(--ink)}
+.sec-h .acts-inline{display:flex;gap:2px;margin-right:-10px}
+.band-h{justify-content:flex-start;gap:10px}
+.band-h .shp{width:18px;height:18px;flex:none;overflow:visible}
+.band-h .c{margin-left:auto;color:var(--faint);font-weight:560;font-variant-numeric:tabular-nums}
+.list{list-style:none;margin:0;padding:0}
+.list>li+li{border-top:1px solid var(--line)}
+.it{width:100%;display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:14px;align-items:center;min-height:72px;padding-block:10px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;border-radius:12px}
+.it:active{background:var(--sunk)}
+.it .nm{display:block;font-size:17px;line-height:22px;font-weight:580;overflow-wrap:anywhere}
+.it .sp{display:block;font-size:14px;line-height:20px;color:var(--muted);margin-top:2px}
+.it .sp .bad{color:var(--exp);font-weight:600}
+.tag{position:relative;width:42px;height:42px;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--tc);line-height:1}
+.tag>.shp{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.tag b,.tag i{position:relative}
+.tag b{font-size:17px;font-weight:760;font-variation-settings:"wdth" 80;font-variant-numeric:tabular-nums}
+.tag i{font-style:normal;font-size:10px;font-weight:600;margin-top:1px}
+.shp .f{fill:var(--c)}
+.shp .f.st{stroke:var(--c);stroke-width:3;stroke-linejoin:round}
+.k-none .shp .f,.t-none .shp .f,.k-none.shp .f{fill:var(--none-fill);stroke:var(--line-strong);stroke-width:2}
+.t-expired,.k-expired{--c:var(--exp-solid);--tc:var(--exp-on)} .t-week,.k-week{--c:var(--week-solid);--tc:var(--week-on)} .t-month,.k-month{--c:var(--month-solid);--tc:var(--month-on)} .t-fresh,.k-fresh{--c:var(--fresh-solid);--tc:var(--fresh-on)} .t-none{--tc:var(--none)}
+.row{width:100%;display:flex;align-items:center;gap:14px;min-height:56px;padding-block:8px;font-size:16px;line-height:22px;text-align:left}
+.row .t{flex:1;min-width:0}
+.row .t small{display:block;font-size:14px;line-height:20px;color:var(--muted);margin-top:2px}
+.row>.ic{color:var(--muted)}
+.row.link{cursor:pointer}
+.row.danger,.row.danger .ic{color:var(--exp)}
+.rows{list-style:none;margin:0;padding:0}
+.rows>*+*{border-top:1px solid var(--line)}
+.stack{display:flex;flex-direction:column;gap:12px}
+.foot{font-size:13px;line-height:18px;color:var(--faint);text-align:center;padding-top:28px}
+.foot .btn{margin-top:4px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 18px;border-radius:12px;background:var(--accent);color:var(--on-accent);font-size:15px;line-height:20px;font-weight:640;white-space:nowrap}
+.btn .ic{width:20px;height:20px;margin-left:-4px}
+.btn.wide{width:100%;height:50px;font-size:16px}
+.btn.outline{background:var(--paper);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line-strong)}
+.btn.tonal{background:var(--accent-soft);color:var(--on-accent-soft)}
+.btn.text{background:none;color:var(--accent);padding:0 10px;height:40px}
+.btn.danger{background:var(--paper);color:var(--exp);box-shadow:inset 0 0 0 1px var(--line-strong)}
+.btn:active{filter:brightness(.94)}
+.btn[disabled]{opacity:.4;cursor:default}
+.btn-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.row .t small.acct{color:var(--ink);overflow-wrap:anywhere}
+.icon-btn{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--ink)}
+.icon-btn:active{background:var(--sunk)}
+
+/* fields */
+.form{display:flex;flex-direction:column;gap:16px}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field>span{font-size:14px;line-height:20px;font-weight:560;color:var(--muted)}
+input[type=text],input[type=email],input[type=password],input[type=number],input[type=date],select,textarea{width:100%;height:48px;border-radius:12px;border:1px solid var(--line-strong);background:var(--paper);padding:0 14px;font-size:16px;color:var(--ink)}
+select{appearance:none;-webkit-appearance:none;padding-right:36px;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 19px) 21px,calc(100% - 14px) 21px;background-size:5px 5px;background-repeat:no-repeat}
+textarea{height:auto;min-height:116px;padding:12px 14px;line-height:22px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+::placeholder{color:var(--faint)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.inline{display:flex;gap:6px;align-items:flex-end}
+.inline>.field{flex:1}
+.inline .btn{height:48px}
+.check{display:flex;gap:10px;align-items:center;font-size:15px;line-height:20px;min-height:40px}
+.check input{width:20px;height:20px;margin:0;accent-color:var(--accent)}
+.hint{font-size:13px;line-height:18px;color:var(--muted)}
+.hint.good{color:var(--fresh)}
+.err{font-size:14px;line-height:20px;color:var(--exp)}
+.switch{appearance:none;-webkit-appearance:none;flex:none;width:46px;height:28px;margin:0;border-radius:14px;background:var(--sunk);box-shadow:inset 0 0 0 1px var(--line-strong);position:relative;cursor:pointer;transition:background .15s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--paper);box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+.switch:checked{background:var(--accent);box-shadow:none}
+.switch:checked::after{transform:translateX(18px);background:var(--on-accent)}
+
+/* small chips (quick add, ingredients) */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{flex:none;height:36px;display:inline-flex;align-items:center;gap:7px;padding:0 12px;border-radius:10px;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line);font-size:15px;line-height:20px;font-weight:540;white-space:nowrap}
+.chip .shp{width:16px;height:16px;flex:none;overflow:visible}
+.chip .ic{width:18px;height:18px;margin-left:-2px}
+.chip.on{background:var(--accent-soft);color:var(--on-accent-soft);box-shadow:inset 0 0 0 1.5px var(--accent)}
+.chip.on .ic{color:var(--accent)}
+
+/* progress */
+.job{display:flex;align-items:center;gap:14px;min-height:56px;font-size:15px;line-height:20px;color:var(--muted)}
+.job p{flex:1;min-width:0}
+.spin{width:22px;height:22px;border-radius:50%;border:2.5px solid var(--line);border-top-color:var(--accent);animation:sp .9s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* empty & locked */
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:28px 8px 16px}
+.empty .ill{width:180px;height:auto;margin-bottom:8px}
+.empty .ill.fridge{width:120px}
+.empty p{font-size:15px;line-height:22px;color:var(--muted);max-width:30ch}
+.empty .btn{margin-top:6px}
+.empty .btn+.btn{margin-top:0}
+.perks{list-style:none;margin:8px 0 4px;padding:0;text-align:left;display:flex;flex-direction:column;gap:6px;font-size:15px;line-height:20px}
+.perks li{display:flex;gap:10px;align-items:flex-start}
+.perks .ic{width:20px;height:20px;color:var(--fresh)}
+
+/* imports */
+.imp-h{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding-top:18px}
+.imp-h b{font-size:15px;line-height:20px;font-weight:650}
+.imp-h span{font-size:13px;line-height:18px;color:var(--faint);white-space:nowrap}
+.dec{list-style:none;margin:0;padding:0}
+.dec li{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:14px;align-items:center;min-height:56px;padding-block:6px}
+.dec li+li{border-top:1px solid var(--line)}
+.dec .ic{width:20px;height:20px}
+.dec .yes .ic{color:var(--fresh)}
+.dec .no .ic{color:var(--faint)}
+.dec .nm{display:block;font-size:16px;line-height:22px;overflow-wrap:anywhere}
+.dec .no .nm{color:var(--muted)}
+.dec small{display:block;font-size:13px;line-height:18px;color:var(--muted)}
+
+/* recipes */
+.rec{display:flex;flex-direction:column;gap:12px;padding-top:28px}
+.rec-head{display:grid;grid-template-columns:64px minmax(0,1fr);gap:4px 16px;align-items:start;padding-top:20px;border-top:2px solid var(--ink)}
+.rec-head .art{width:64px;height:64px;border-radius:18px;grid-row:span 3}
+.rec-head .art svg{width:48px;height:48px}
+.rec-head h2{font-size:26px;line-height:30px;font-weight:720;font-variation-settings:"wdth" 80}
+.rec-head p{grid-column:2}
+.rec-why{font-size:16px;line-height:24px}
+.ing{list-style:none;margin:0;padding:0}
+.ing li{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding-block:10px;font-size:16px;line-height:22px}
+.ing li+li{border-top:1px solid var(--line)}
+.ing .st{font-size:13px;line-height:18px;font-weight:620;white-space:nowrap;border-radius:6px;padding:1px 7px}
+.st-have{color:var(--fresh);background:var(--fresh-bg)} .st-missing{color:var(--week);background:var(--week-bg)} .st-staple{color:var(--muted);background:var(--sunk)}
+.steps{margin:0;padding-left:24px;display:flex;flex-direction:column;gap:10px;font-size:16px;line-height:24px}
+.steps li{padding-left:6px}
+.steps li::marker{color:var(--accent);font-weight:720}
+.verdict{border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:6px;background:var(--vb)}
+.verdict.order{--vb:var(--week-bg);--vc:var(--week)}
+.verdict.no_need{--vb:var(--fresh-bg);--vc:var(--fresh)}
+.verdict .vd{font-size:22px;line-height:28px;font-weight:720;font-variation-settings:"wdth" 82;color:var(--vc)}
+.verdict p,.verdict li{font-size:15px;line-height:22px}
+.verdict .lbl{font-size:14px;line-height:20px;font-weight:650;margin-top:6px}
+.buy{margin:0;padding-left:18px}
+.verdict .btn{align-self:flex-start;margin-left:-10px}
+
+/* plans */
+.plans{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.plan{position:relative;background:var(--paper);box-shadow:inset 0 0 0 1px var(--line);border-radius:16px;padding:16px 14px 14px;display:flex;flex-direction:column;gap:2px}
+.plan.cur{box-shadow:inset 0 0 0 2px var(--accent)}
+.plan .pn{font-size:16px;line-height:22px;font-weight:650}
+.plan .pp{font-size:30px;line-height:34px;font-weight:760;font-variation-settings:"wdth" 78;font-variant-numeric:tabular-nums}
+.plan .pp small{font-size:13px;line-height:18px;font-weight:500;color:var(--muted);font-variation-settings:normal;margin-left:2px}
+.plan ul{margin:8px 0 0;padding:0;list-style:none;font-size:14px;line-height:19px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+.plan .you{position:absolute;top:-9px;right:12px;font-size:12px;line-height:16px;font-weight:650;color:var(--on-accent);background:var(--accent);border-radius:6px;padding:1px 7px}
+@media (max-width:340px){.plans{grid-template-columns:1fr}}
+
+/* navigation */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--paper);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+.nav .in{max-width:36rem;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);height:var(--nav)}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;line-height:16px;font-weight:560;color:var(--faint);text-align:center}
+.tab .ic{width:24px;height:24px}
+.tab.on{color:var(--accent);font-weight:700}
+.tab .lbl{display:inline-flex;align-items:center;gap:3px}
+.tab .lbl .ic{width:12px;height:12px}
+
+/* sheets & dialogs */
+.sheet{position:fixed;inset:0;z-index:40;background:var(--scrim);display:flex;align-items:flex-end;justify-content:center}
+.sheet .pnl{width:100%;max-width:36rem;max-height:92vh;overflow:auto;background:var(--paper);border-radius:22px 22px 0 0;padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+.sheet.full .pnl{height:100%;max-height:none;border-radius:0;background:var(--bg);padding-top:env(safe-area-inset-top,0px);padding-bottom:0;display:flex;flex-direction:column}
+@media (min-width:640px){.sheet.full{align-items:center;padding:24px}.sheet.full .pnl{height:auto;max-height:calc(100vh - 48px);border-radius:22px}}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line-strong);margin:12px auto 14px}
+.sh-head{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:14px;align-items:center;padding-bottom:10px}
+.sh-head h2{overflow-wrap:anywhere}
+.sheet .pnl .rows .row{padding-inline:2px}
+.dlg-bar{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;align-items:center;gap:8px;min-height:64px;margin-right:-8px}
+.dlg-bar h2{flex:1;min-width:0;font-size:26px;line-height:30px;font-weight:720;font-variation-settings:"wdth" 80}
+.dlg-body{flex:1;overflow:auto;padding-bottom:24px;display:flex;flex-direction:column;gap:8px}
+.dlg-foot{position:sticky;bottom:0;background:var(--bg);padding-block:12px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.snack{position:fixed;z-index:50;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));bottom:calc(var(--nav) + 12px + env(safe-area-inset-bottom,0px));max-width:34rem;margin:0 auto;background:var(--snack);color:var(--on-snack);border-radius:14px;min-height:50px;padding:6px 8px 6px 16px;display:flex;align-items:center;gap:8px;font-size:15px;line-height:20px;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+.snack span{flex:1;padding-block:8px}
+.snack button{color:var(--snack-action);font-weight:700;padding:10px 12px;border-radius:10px}
+.copybox{width:100%;font-size:14px;min-height:90px}
+@media (max-width:400px){h1{font-size:28px;line-height:32px}.add-btn{width:40px;padding:0;justify-content:center}.add-btn .t{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}}
+@media (max-width:360px){.grid3{grid-template-columns:1fr 1fr}.hero{grid-template-columns:minmax(0,1fr) 124px}.hero .fridge{width:124px}.hero .big{font-size:64px;line-height:58px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="bar-top gut">
+    <h1 id="title">Grocery Tracker</h1>
+    <span class="plan-tag" id="planTag" hidden>Paid</span>
+    <button class="add-btn" id="addBtn" type="button" data-act="add" hidden><svg class="ic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span class="t">Add</span></button>
+  </header>
+  <main id="view" class="gut" aria-live="polite">
+    <div class="empty"><p>Loading your list…</p></div>
+  </main>
+</div>
+<nav class="nav" aria-label="Sections"><div class="in" id="tabs"></div></nav>
+<div class="sheet" id="sheet" hidden><div class="pnl gut" role="dialog" aria-modal="true" id="sheetPanel"></div></div>
+<div class="snack" id="toast" role="status" hidden></div>
+<script src="config.js"></script>
+<script src="firebase-ai.js"></script>
+<script>
+/* App version (Play Store): AI = Google Gemini through Firebase AI Logic, saving = this phone, email = Gmail API with Google sign-in. Settings live in config.js. */
+window.Platform = (function () {
+  'use strict';
+  const CFG = window.GT_CONFIG || {};
+  const LS = 'gt-state-v1';
+  const P = { name: 'pwa', checkoutNote: 'In the Play Store release, real subscriptions must go through Google Play Billing.' };
+  let model = null, aiError = '';
+
+  const fbReady = () => CFG.firebase && CFG.firebase.apiKey && CFG.firebase.appId && !/PASTE/i.test(CFG.firebase.apiKey);
+
+  P.init = async function () {
+    if ('serviceWorker' in navigator) { try { navigator.serviceWorker.register('./sw.js'); } catch (e) {} }
+    if (fbReady() && window.GTFirebase) {
+      try {
+        const F = window.GTFirebase;
+        const app = F.initializeApp(CFG.firebase);
+        if (CFG.recaptchaSiteKey) F.initializeAppCheck(app, { provider: new F.ReCaptchaV3Provider(CFG.recaptchaSiteKey), isTokenAutoRefreshEnabled: true });
+        const ai = F.getAI(app, { backend: new F.GoogleAIBackend() });
+        model = F.getGenerativeModel(ai, { model: CFG.geminiModel || 'gemini-3.5-flash', generationConfig: { responseMimeType: 'application/json', temperature: 0.4 } });
+      } catch (e) { aiError = String(e && e.message || e); model = null; }
+    }
+    if (CFG.googleClientId) loadGIS().catch(() => {});
+  };
+  P.storageNote = () => 'Your list is saved on this phone. Uninstalling the app or clearing its data removes it.';
+  P.load = async function () { try { return JSON.parse(localStorage.getItem(LS) || 'null'); } catch (e) { return null; } };
+  P.save = async function (state) { try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {} };
+
+  /* ---- AI via Gemini ---- */
+  function parseJSON(text) {
+    const t = String(text || '').trim();
+    try { return JSON.parse(t); } catch (e) {}
+    const fence = /```(?:json)?\s*([\s\S]*?)```/i.exec(t);
+    if (fence) { try { return JSON.parse(fence[1]); } catch (e) {} }
+    const a = Math.min(...['{', '['].map((c) => { const i = t.indexOf(c); return i < 0 ? Infinity : i; }));
+    const b = Math.max(t.lastIndexOf('}'), t.lastIndexOf(']'));
+    if (a !== Infinity && b > a) { try { return JSON.parse(t.slice(a, b + 1)); } catch (e) {} }
+    throw { code: 'invalid_json' };
+  }
+  function shrink(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const s = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL('image/jpeg', 0.85).split(',')[1]);
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject({ code: 'image_rejected' }); };
+      img.src = url;
+    });
+  }
+  P.ai = {
+    get setupHint() { return fbReady() ? ('The AI assistant could not start' + (aiError ? ': ' + aiError : '.') + ' Check the Firebase settings in config.js.') : 'The AI assistant isn’t set up yet. Add your Firebase settings to config.js (see the setup guide, step 3).'; },
+    available: () => !!model,
+    json: async function (prompt, o) {
+      if (!model) throw { code: 'not_configured' };
+      const parts = [{ text: prompt }];
+      if (o && o.images) for (const f of Array.from(o.images)) parts.push({ inlineData: { mimeType: 'image/jpeg', data: await shrink(f) } });
+      if (o && o.signal && o.signal.aborted) throw { code: 'cancelled' };
+      let res;
+      try { res = await model.generateContent(parts); }
+      catch (e) {
+        const msg = String(e && e.message || e);
+        if (/quota|429|RESOURCE_EXHAUSTED/i.test(msg)) throw { code: 'rate_limited' };
+        if (/app.?check|403|PERMISSION_DENIED/i.test(msg)) throw { code: 'gemini_error', message: 'access denied — check App Check and the API key restrictions (setup guide, step 3).' };
+        throw { code: 'gemini_error', message: msg.slice(0, 160) };
+      }
+      if (o && o.signal && o.signal.aborted) throw { code: 'cancelled' };
+      return parseJSON(res.response.text());
+    },
+  };
+
+  /* ---- Gmail via Google Identity Services + Gmail REST API ---- */
+  let gisP = null, tok = null, acct = '';
+  function loadGIS() {
+    if (gisP) return gisP;
+    gisP = new Promise((res, rej) => {
+      if (window.google && google.accounts && google.accounts.oauth2) return res();
+      const s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client'; s.async = true;
+      s.onload = () => res(); s.onerror = () => { gisP = null; rej({ code: 'gis_load' }); };
+      document.head.appendChild(s);
+    });
+    return gisP;
+  }
+  async function token(interactive, pick) {
+    if (!pick) {
+      if (tok && tok.exp > Date.now() + 60000) return tok.value;
+      try { const t = JSON.parse(sessionStorage.getItem('gt-gtok') || 'null'); if (t && t.exp > Date.now() + 60000) { tok = t; return t.value; } } catch (e) {}
+    }
+    if (!interactive) throw { code: 'needs_signin' };
+    await loadGIS();
+    return new Promise((resolve, reject) => {
+      const client = google.accounts.oauth2.initTokenClient({
+        client_id: CFG.googleClientId,
+        scope: 'https://www.googleapis.com/auth/gmail.readonly',
+        callback: (r) => {
+          if (!r || r.error) { reject({ code: 'signin_failed', message: r && r.error }); return; }
+          tok = { value: r.access_token, exp: Date.now() + (Number(r.expires_in) || 3600) * 1000 };
+          try { sessionStorage.setItem('gt-gtok', JSON.stringify(tok)); } catch (e) {}
+          resolve(tok.value);
+        },
+        error_callback: (e) => reject({ code: e && e.type === 'popup_closed' ? 'cancelled_signin' : 'signin_failed' }),
+      });
+      // 'select_account' makes Google show its account chooser, so the user can pick a different Gmail.
+      client.requestAccessToken({ prompt: pick ? 'select_account' : '' });
+    });
+  }
+  function signOut() {
+    const old = tok && tok.value;
+    tok = null; acct = '';
+    try { sessionStorage.removeItem('gt-gtok'); } catch (e) {}
+    // Hand the old permission back to Google so the previous account is no longer linked.
+    if (old && window.google && google.accounts && google.accounts.oauth2) { try { google.accounts.oauth2.revoke(old, () => {}); } catch (e) {} }
+  }
+  async function gapi(path, t) {
+    const r = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/' + path, { headers: { Authorization: 'Bearer ' + t } });
+    if (r.status === 401) { tok = null; try { sessionStorage.removeItem('gt-gtok'); } catch (e) {} throw { code: 'needs_signin' }; }
+    if (!r.ok) throw { code: 'gmail_http', message: String(r.status) };
+    return r.json();
+  }
+  const b64 = (s) => { try { const bin = atob(String(s).replace(/-/g, '+').replace(/_/g, '/')); return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0))); } catch (e) { return ''; } };
+  function bodyText(part) {
+    let plain = '', html = '';
+    (function walk(p) {
+      if (!p) return;
+      if (p.mimeType === 'text/plain' && p.body && p.body.data) plain += b64(p.body.data) + '\n';
+      else if (p.mimeType === 'text/html' && p.body && p.body.data) html += b64(p.body.data) + '\n';
+      (p.parts || []).forEach(walk);
+    })(part);
+    if (plain.trim()) return plain;
+    try { const d = new DOMParser().parseFromString(html, 'text/html'); d.querySelectorAll('style,script').forEach((x) => x.remove()); return d.body ? d.body.textContent : ''; } catch (e) { return ''; }
+  }
+  P.gmail = CFG.googleClientId ? {
+    label: 'your Gmail',
+    autoNote: 'works while you are signed in to Google in this app',
+    available: () => true,
+    account: () => acct,
+    signOut,
+    fetchOrderEmails: async function (o) {
+      const t = await token(o.interactive, o.pickAccount);
+      if (!acct) { try { const pr = await gapi('profile', t); acct = (pr && pr.emailAddress) || ''; } catch (e) { if (e && e.code === 'needs_signin') throw e; } }
+      const list = await gapi('messages?maxResults=20&q=' + encodeURIComponent(o.query), t);
+      const ids = (list.messages || []).map((m) => m.id).filter((id) => !o.seen.includes('gm-' + id)).slice(0, o.max);
+      const out = [];
+      for (const id of ids) {
+        const m = await gapi('messages/' + id + '?format=full', t);
+        const h = {}; ((m.payload && m.payload.headers) || []).forEach((x) => { h[x.name.toLowerCase()] = x.value; });
+        const text = ('From: ' + (h.from || '') + '\nSubject: ' + (h.subject || '') + '\nDate: ' + (h.date || '') + '\n\n' + bodyText(m.payload)).replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n');
+        out.push({ ref: 'gm-' + id, text: text.slice(0, 9000) });
+      }
+      return out;
+    },
+    errorText: function (e) {
+      const c = e && e.code;
+      if (c === 'cancelled_signin') return 'Google sign-in was closed before it finished. Tap the button to try again.';
+      if (c === 'signin_failed') return 'Google sign-in didn’t work. If you see “access blocked”, your Google account must be added as a test user (setup guide, step 4).';
+      if (c === 'needs_signin') return 'Sign in to Google again to check your order emails.';
+      if (c === 'gis_load') return 'Couldn’t reach Google sign-in. Check your internet connection.';
+      if (c === 'gmail_http') return 'Gmail returned an error (' + e.message + '). Check that the Gmail API is turned on (setup guide, step 4).';
+      return '';
+    },
+  } : { label: 'your Gmail', available: () => false, setupHint: 'Email import isn’t set up yet. Add a Google client ID to config.js (setup guide, step 4). Until then, paste or share orders below.' };
+
+  /* ---- Android share sheet → app ---- */
+  P.sharedText = function () {
+    try {
+      const u = new URL(location.href);
+      const t = [u.searchParams.get('shared_title'), u.searchParams.get('shared_text'), u.searchParams.get('shared_url')].filter(Boolean).join('\n').trim();
+      if (t) history.replaceState(null, '', location.pathname);
+      return t;
+    } catch (e) { return ''; }
+  };
+
+  /* ---- reminders ---- */
+  if ('Notification' in window) {
+    P.notify = {
+      permission: async () => { try { return (await Notification.requestPermission()) === 'granted'; } catch (e) { return false; } },
+      show: async (title, body) => {
+        if (Notification.permission !== 'granted') return;
+        try { const reg = await navigator.serviceWorker.ready; reg.showNotification(title, { body, icon: './icon-192.png', badge: './icon-192.png', tag: 'gt-expiry' }); }
+        catch (e) { try { new Notification(title, { body }); } catch (er) {} }
+      },
+    };
+  }
+  return P;
+})();
+
+</script>
+<script>
+/* Grocery Tracker — shared app core. Platform adapters (testable build / Play Store build) supply window.Platform. */
+(function () {
+'use strict';
+const P = window.Platform;
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+const pl = (n, w, ws) => n + ' ' + (n === 1 ? w : (ws || w + 's'));
+const num = (v) => { const n = Number(v); return Number.isFinite(n) ? n : null; };
+
+/* ---------- dates (all local calendar days, stored as YYYY-MM-DD) ---------- */
+const pad = (n) => String(n).padStart(2, '0');
+const todayISO = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const parseISO = (s) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); return m ? Date.UTC(+m[1], +m[2] - 1, +m[3]) : NaN; };
+const validISO = (s) => !isNaN(parseISO(s));
+const addDays = (iso, n) => { const t = parseISO(iso); if (isNaN(t)) return null; const d = new Date(t + n * 864e5); return d.getUTCFullYear() + '-' + pad(d.getUTCMonth() + 1) + '-' + pad(d.getUTCDate()); };
+const diffDays = (a, b) => Math.round((parseISO(b) - parseISO(a)) / 864e5);
+const fmtDate = (iso) => { const t = parseISO(iso); if (isNaN(t)) return ''; return new Date(t).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' }); };
+const fmtShort = (iso) => { const t = parseISO(iso); if (isNaN(t)) return ''; return new Date(t).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', timeZone: 'UTC' }); };
+const ago = (ms) => { if (!ms) return 'never'; const m = Math.round((Date.now() - ms) / 60000); if (m < 1) return 'just now'; if (m < 60) return m + ' min ago'; const h = Math.round(m / 60); if (h < 24) return h + ' h ago'; return Math.round(h / 24) + ' d ago'; };
+
+/* ---------- constants ---------- */
+const PRICE = 399;
+const OVERRIDE_HASH = 'b7d70edda31ff6a4e9951e64d1cde60c9b317fd4c704a85fd82c3f645bb8bf3e';
+const CATS = ['Dairy & eggs', 'Vegetables & herbs', 'Fruit', 'Bakery', 'Meat & fish', 'Staples', 'Spices & sauces', 'Snacks & sweets', 'Drinks', 'Frozen', 'Ready to eat', 'Other'];
+const STORAGE = { fridge: 'Fridge', freezer: 'Freezer', pantry: 'Shelf' };
+const STORES = ['Amazon', 'Blinkit', 'Zepto', 'BigBasket', 'Swiggy Instamart', 'JioMart', 'Flipkart', 'Local shop', 'Supermarket', 'Other'];
+const BANDS = [
+  ['expired', 'Expired', 'past its date'],
+  ['week', 'Within a week', '0–7 days left'],
+  ['month', 'Within a month', '8–30 days left'],
+  ['fresh', 'Fresh', 'more than 30 days left'],
+  ['none', 'No date', 'no reliable date'],
+];
+const BAND_LABEL = Object.fromEntries(BANDS.map((b) => [b[0], b[1]]));
+const GMAIL_QUERY = 'newer_than:30d {from:amazon.in from:amazon.com from:blinkit.com from:zeptonow.com from:bigbasket.com from:swiggy.in from:jiomart.com from:flipkart.com from:dmart.in} {subject:order subject:ordered subject:delivered subject:delivery}';
+
+/* Typical home shelf life, used by the free plan's "Suggest" button and quick-add chips. */
+const SHELF = [
+  [/\b(milk|doodh)\b/i, 'Milk', 'Dairy & eggs', 'fridge', 2, 'L'],
+  [/\b(curd|dahi|yog(h)?urt)\b/i, 'Curd', 'Dairy & eggs', 'fridge', 4, 'g'],
+  [/\bpaneer\b/i, 'Paneer', 'Dairy & eggs', 'fridge', 4, 'g'],
+  [/\bbutter\b/i, 'Butter', 'Dairy & eggs', 'fridge', 30, 'g'],
+  [/\bcheese\b/i, 'Cheese', 'Dairy & eggs', 'fridge', 21, 'g'],
+  [/\beggs?\b/i, 'Eggs', 'Dairy & eggs', 'fridge', 21, 'pcs'],
+  [/\b(bread|pav|bun)\b/i, 'Bread', 'Bakery', 'pantry', 4, 'pack'],
+  [/\btomato(es)?\b/i, 'Tomatoes', 'Vegetables & herbs', 'fridge', 6, 'kg'],
+  [/\b(onions?|pyaaz)\b/i, 'Onions', 'Vegetables & herbs', 'pantry', 30, 'kg'],
+  [/\b(potato(es)?|aloo)\b/i, 'Potatoes', 'Vegetables & herbs', 'pantry', 30, 'kg'],
+  [/\b(coriander|dhania|cilantro)\b/i, 'Coriander', 'Vegetables & herbs', 'fridge', 3, 'bunch'],
+  [/\b(mint|pudina)\b/i, 'Mint', 'Vegetables & herbs', 'fridge', 4, 'bunch'],
+  [/\b(spinach|palak)\b/i, 'Spinach', 'Vegetables & herbs', 'fridge', 3, 'bunch'],
+  [/\blettuce\b/i, 'Lettuce', 'Vegetables & herbs', 'fridge', 7, 'pcs'],
+  [/\bcarrots?\b/i, 'Carrots', 'Vegetables & herbs', 'fridge', 14, 'kg'],
+  [/\bcucumbers?\b/i, 'Cucumber', 'Vegetables & herbs', 'fridge', 7, 'pcs'],
+  [/\b(capsicum|bell pepper)\b/i, 'Capsicum', 'Vegetables & herbs', 'fridge', 7, 'pcs'],
+  [/\b(broccoli)\b/i, 'Broccoli', 'Vegetables & herbs', 'fridge', 5, 'pcs'],
+  [/\b(ginger|adrak)\b/i, 'Ginger', 'Vegetables & herbs', 'fridge', 21, 'g'],
+  [/\b(garlic|lehsun)\b/i, 'Garlic', 'Vegetables & herbs', 'pantry', 60, 'g'],
+  [/\b(lemons?|nimbu)\b/i, 'Lemons', 'Fruit', 'fridge', 14, 'pcs'],
+  [/\bbananas?\b/i, 'Bananas', 'Fruit', 'pantry', 4, 'dozen'],
+  [/\bapples?\b/i, 'Apples', 'Fruit', 'fridge', 30, 'kg'],
+  [/\b(mangoe?s?)\b/i, 'Mangoes', 'Fruit', 'pantry', 5, 'kg'],
+  [/\b(chicken)\b/i, 'Chicken', 'Meat & fish', 'fridge', 2, 'kg'],
+  [/\b(fish|prawns?)\b/i, 'Fish', 'Meat & fish', 'fridge', 1, 'kg'],
+  [/\b(atta|flour)\b/i, 'Atta', 'Staples', 'pantry', 90, 'kg'],
+  [/\b(rice|chawal)\b/i, 'Rice', 'Staples', 'pantry', 365, 'kg'],
+  [/\b(dal|lentils?)\b/i, 'Dal', 'Staples', 'pantry', 180, 'kg'],
+  [/\b(oil)\b/i, 'Cooking oil', 'Staples', 'pantry', 180, 'L'],
+  [/\b(oats|oatmeal)\b/i, 'Oats', 'Staples', 'pantry', 180, 'g'],
+  [/\b(biscuits?|cookies?)\b/i, 'Biscuits', 'Snacks & sweets', 'pantry', 90, 'pack'],
+  [/\b(chips|namkeen)\b/i, 'Namkeen', 'Snacks & sweets', 'pantry', 60, 'pack'],
+  [/\b(juice)\b/i, 'Juice', 'Drinks', 'pantry', 120, 'L'],
+];
+const QUICK = ['Milk', 'Curd', 'Paneer', 'Eggs', 'Bread', 'Tomatoes', 'Onions', 'Potatoes', 'Coriander', 'Spinach', 'Bananas', 'Apples'];
+const shelfFor = (name) => SHELF.find((s) => s[0].test(name || ''));
+
+/* Our 3-day fridge audit (Evening 1), used as a clearly marked sample. Days are the team's own recorded figures. */
+const AUDIT = [
+  ['Bread', 'Bakery', 'pantry', 180, 1, 'pack', null],
+  ['Eggs', 'Dairy & eggs', 'fridge', 90, 12, 'pcs', null],
+  ['Milk', 'Dairy & eggs', 'fridge', 5, 1, 'L', null],
+  ['Yogurt', 'Dairy & eggs', 'fridge', 3, 400, 'g', null],
+  ['Tomatoes', 'Vegetables & herbs', 'fridge', 2, 1, 'kg', 250],
+  ['Lettuce', 'Vegetables & herbs', 'fridge', 10, 1, 'pcs', null],
+  ['Carrots', 'Vegetables & herbs', 'fridge', 7, 500, 'g', null],
+  ['Coriander', 'Vegetables & herbs', 'fridge', 1, 1, 'bunch', 150],
+  ['Haribo gummies', 'Snacks & sweets', 'pantry', 1, 1, 'pack', 550],
+];
+
+/* Sample orders for the demo "Amazon" connection: a mix of groceries and non-groceries for the AI to sort. */
+const SAMPLE_ORDERS = [
+  { ref: 'sample-amz-1', store: 'Amazon', text: 'Amazon.in order #404-1182736-5521907 — Delivered today\n1 x Amul Taaza Toned Milk 1 L Tetra Pak (pack of 2) — Rs 148\n1 x boAt USB Type-C to Type-C cable 1.5 m — Rs 299\n1 x Fortune Sunlite refined sunflower oil 1 L pouch — Rs 165\n1 x Classmate single-line notebook, 172 pages (pack of 6) — Rs 318\n1 x Britannia 100% whole wheat bread 400 g — Rs 55' },
+  { ref: 'sample-amz-2', store: 'Amazon Fresh', text: 'Amazon Fresh order #171-5520193-0040126 — Delivered yesterday\nFresh coriander leaves 100 g — Rs 22\nTomato (local) 1 kg — Rs 48\nDettol original liquid handwash refill 1500 ml — Rs 199\nMother Dairy classic curd 400 g cup — Rs 50\nTata Sampann unpolished toor dal 1 kg — Rs 179\nPedigree adult dry dog food, chicken & vegetables 3 kg — Rs 780' },
+  { ref: 'sample-amz-3', store: 'Amazon', text: 'Amazon.in order #408-7781234-9927731 — Arriving today\nHaribo Goldbears gummies 160 g — Rs 199\nCadbury Dairy Milk Silk 150 g — Rs 199\nPhilips hair dryer BHD308 — Rs 1,249\nKiwi (imported) 3 pcs — Rs 120\nPaper Boat Aamras 1 L — Rs 125' },
+];
+
+/* ---------- state ---------- */
+const DEFAULT = () => ({
+  v: 1, plan: 'free', planInfo: null, items: [], imports: [], seenRefs: [],
+  settings: { household: 4, diet: 'Vegetarian', climate: 'Hot summers and a humid monsoon (North India)', autoSync: true, remind: false },
+  gmailLinked: false, gmailEmail: '', lastSync: 0, lastPing: '',
+});
+function migrate(s) {
+  const d = DEFAULT();
+  if (!s || typeof s !== 'object') return d;
+  const o = JSON.parse(JSON.stringify(s));
+  return Object.assign(d, o, {
+    settings: Object.assign(d.settings, o.settings || {}),
+    items: Array.isArray(o.items) ? o.items : [],
+    imports: Array.isArray(o.imports) ? o.imports : [],
+    seenRefs: Array.isArray(o.seenRefs) ? o.seenRefs : [],
+  });
+}
+let ST = DEFAULT();
+const UI = { tab: 'fridge', filter: 'all', q: '', pick: new Set(), recipe: null, shop: null, job: null, jobErr: '', paste: '', checkoutErr: '', editId: null, ready: false, labelNote: '' };
+const isPaid = () => ST.plan === 'paid';
+let saveT = null;
+function commit(opts) {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => { P.save(ST); }, 500);
+  if (!opts || opts.render !== false) render();
+}
+const snapshot = () => JSON.stringify(ST);
+function restore(json) { ST = migrate(JSON.parse(json)); commit(); }
+
+/* ---------- items ---------- */
+const active = () => ST.items.filter((i) => i.status === 'active');
+function daysLeft(it) { return it.expiry && validISO(it.expiry) ? diffDays(todayISO(), it.expiry) : null; }
+function band(it) { const d = daysLeft(it); if (d === null) return 'none'; if (d < 0) return 'expired'; if (d <= 7) return 'week'; if (d <= 30) return 'month'; return 'fresh'; }
+/* Sticker shapes: each urgency has its own shape as well as its own colour, so the key still works for colour-blind readers */
+const SHAPES = (() => {
+  const c = 22, f = (v) => v.toFixed(2);
+  const poly = (n, r) => { let d = ''; for (let i = 0; i < n; i++) { const a = i / n * 2 * Math.PI - Math.PI / 2, R = r(a, i); d += (i ? 'L' : 'M') + f(c + R * Math.cos(a)) + ' ' + f(c + R * Math.sin(a)); } return d + 'Z'; };
+  const squircle = (r) => { let d = ''; for (let i = 0; i < 72; i++) { const t = i / 72 * 2 * Math.PI, ct = Math.cos(t), st = Math.sin(t); d += (i ? 'L' : 'M') + f(c + r * Math.sign(ct) * Math.sqrt(Math.abs(ct))) + ' ' + f(c + r * Math.sign(st) * Math.sqrt(Math.abs(st))); } return d + 'Z'; };
+  return {
+    expired: '<path class="f st" d="' + poly(24, (a, i) => (i % 2 ? 16.4 : 20)) + '"/>',
+    week: '<path class="f" d="' + poly(120, (a) => 19.2 + 2.7 * Math.cos(6 * a)) + '"/>',
+    month: '<path class="f" d="' + squircle(20.5) + '"/>',
+    fresh: '<circle class="f" cx="22" cy="22" r="21"/>',
+    none: '<rect class="f" x="2" y="2" width="40" height="40" rx="10"/>',
+  };
+})();
+const shapeSVG = (b) => '<svg class="shp" viewBox="0 0 44 44" aria-hidden="true">' + SHAPES[b] + '</svg>';
+function tagHTML(it) {
+  const d = daysLeft(it); const b = band(it);
+  let big, small;
+  if (d === null) { big = '–'; small = 'no date'; }
+  else if (d < 0) { big = String(-d); small = 'ago'; }
+  else if (d === 0) { big = '0'; small = 'today'; }
+  else if (d > 60) { big = String(Math.round(d / 30)); small = 'mo'; }
+  else { big = String(d); small = d === 1 ? 'day' : 'days'; }
+  return '<span class="tag t-' + b + '" aria-label="' + esc(BAND_LABEL[b]) + '">' + shapeSVG(b) + '<b>' + big + '</b><i>' + small + '</i></span>';
+}
+function makeItem(f) {
+  return {
+    id: uid(), name: String(f.name || '').trim().slice(0, 80) || 'Item', category: CATS.includes(f.category) ? f.category : 'Other',
+    qty: num(f.qty), unit: String(f.unit || '').slice(0, 12), purchased: validISO(f.purchased) ? f.purchased : todayISO(),
+    expiry: validISO(f.expiry) ? f.expiry : null, expirySource: f.expirySource || (validISO(f.expiry) ? 'manual' : 'none'),
+    storage: STORAGE[f.storage] ? f.storage : 'fridge', price: num(f.price), store: String(f.store || '').slice(0, 40),
+    source: f.source || 'manual', sample: !!f.sample, status: 'active', addedAt: Date.now(), closedAt: null,
+  };
+}
+const norm = (s) => String(s || '').toLowerCase().replace(/\(.*?\)/g, ' ').replace(/[^a-z\s]/g, ' ').replace(/\b(fresh|organic|pack|of|pcs|kg|g|ml|l|litre|liter|tetra|pouch|cup|the|and|local|imported)\b/g, ' ').replace(/\s+/g, ' ').trim();
+
+/* Restock radar: items the family buys repeatedly, and whether one is due (from purchase history). */
+function radar() {
+  const groups = {};
+  for (const it of ST.items) {
+    if (it.sample) continue;
+    const k = norm(it.name).split(' ').slice(-2).join(' ');
+    if (!k) continue;
+    (groups[k] = groups[k] || { name: it.name, dates: new Set(), active: false }).dates.add(it.purchased);
+    if (it.status === 'active') groups[k].active = true;
+  }
+  const out = [];
+  const t = todayISO();
+  for (const k in groups) {
+    const g = groups[k];
+    const ds = Array.from(g.dates).filter(validISO).sort();
+    if (ds.length < 2) continue;
+    let gaps = 0; for (let i = 1; i < ds.length; i++) gaps += diffDays(ds[i - 1], ds[i]);
+    const every = Math.max(1, Math.round(gaps / (ds.length - 1)));
+    const since = diffDays(ds[ds.length - 1], t);
+    out.push({ name: g.name, every, since, due: !g.active && since >= every, active: g.active });
+  }
+  return out.sort((a, b) => (b.due - a.due) || (b.since - b.every) - (a.since - a.every));
+}
+
+
+/* ---------- AI ---------- */
+function aiErr(e) {
+  const c = e && e.code;
+  if (c === 'cancelled') return '';
+  if (c === 'not_configured' || c === 'unavailable') return (P.ai && P.ai.setupHint) || 'The AI assistant is not available here.';
+  if (c === 'not_granted' || c === 'sampling_disabled' || c === 'capability_disabled') return 'The AI assistant is switched off for this app. Reload and choose Allow when asked, so the assistant can run.';
+  if (c === 'rate_limited') return 'Too many AI requests right now. Wait a minute, then try again.';
+  if (c === 'invalid_json') return 'The AI answer came back in the wrong format. Tap the button to try again.';
+  if (c === 'refused') return 'The AI declined that request. Try different text or a clearer photo.';
+  if (c === 'session_expired') return 'Your session expired. Sign in again, then retry.';
+  if (c === 'image_rejected') return 'That photo could not be used. Try a smaller JPG or PNG.';
+  if (c === 'images_unavailable') return 'Photos can’t be sent to the AI in this view. Type the details instead.';
+  if (c === 'prompt_too_large') return 'That was too much text for one go. Paste a single order at a time.';
+  if (e && e.message && c === 'gemini_error') return 'The AI service replied with an error: ' + e.message;
+  return 'The AI could not answer just now. Check your connection and try again.';
+}
+async function ask(prompt, opts) {
+  if (!P.ai || !P.ai.available()) throw { code: 'not_configured' };
+  return P.ai.json(prompt, opts || {});
+}
+const CAT_LIST = CATS.join(' | ');
+function kitchenContext() {
+  const s = ST.settings;
+  return 'Household: ' + s.household + ' people. Usual diet: ' + s.diet + '. Climate: ' + s.climate + '. Today is ' + todayISO() + ' (' + fmtDate(todayISO()) + ').';
+}
+function ordersPrompt(sources) {
+  return [
+    'You are the grocery-detection assistant inside Grocery Tracker, an Indian family app that stops food going to waste.',
+    kitchenContext(),
+    'Below are ' + sources.length + ' shopping record(s): order confirmation emails, pasted order details or order text. For EACH record:',
+    '1. Decide if it is a real purchase/order (not an advert, newsletter, OTP or return). If not, return it with is_order=false and no items.',
+    '2. List every product line. Decide is_grocery: true only for food or drink that people eat or drink at home (fresh produce, herbs, dairy, eggs, bakery, meat, fish, staples like atta/rice/dal/oil, spices, sauces, snacks, sweets, chocolate, beverages, frozen and ready-to-eat food, baby food). Everything else is false: electronics, stationery, cleaning and laundry products, toiletries, cosmetics, medicines and supplements, pet food, kitchenware, clothing.',
+    '3. For each grocery, estimate shelf_life_days = whole days from the order/delivery date until it should be used up or thrown away, as sold and stored the usual way in an Indian home in this climate (fresh herbs ~3, leafy greens ~3, tomatoes ~5-7 in the fridge, pouch milk ~2, UHT tetra milk ~90 unopened, curd ~4, bread ~4, eggs ~21 refrigerated, dal/rice months). Use the typical remaining shelf life when bought online for packaged goods.',
+    '4. confidence: "high" when the product type makes the date predictable, "low" when the pack date could vary a lot.',
+    'Work out order_date as YYYY-MM-DD from the text if you can (e.g. "Delivered yesterday" means yesterday\'s date); otherwise null.',
+    'Use clean, short product names a family would recognise (keep the brand only if it helps, e.g. "Amul Taaza toned milk").',
+    'Reply with only JSON in this exact shape:',
+    '{"orders":[{"ref":"<ref given below>","store":"Amazon","order_date":"YYYY-MM-DD or null","is_order":true,"items":[{"name":"Toned milk","is_grocery":true,"why":"dairy for drinking","category":"Dairy & eggs","quantity":2,"unit":"L","storage":"fridge","shelf_life_days":90,"confidence":"medium","price_inr":148}]}]}',
+    'category must be one of: ' + CAT_LIST + '. storage must be one of: fridge | freezer | pantry. "why" is at most 8 words. Non-groceries still appear with is_grocery=false, a "why", and null shelf_life_days.',
+    '',
+    sources.map((s, i) => '=== RECORD ' + (i + 1) + ' (ref: ' + s.ref + (s.store ? ', store hint: ' + s.store : '') + ') ===\n' + String(s.text).slice(0, 9000)).join('\n\n'),
+  ].join('\n');
+}
+function screenshotPrompt(ref) {
+  return [
+    'You are the grocery-detection assistant inside Grocery Tracker, an Indian family app that stops food going to waste.',
+    kitchenContext(),
+    'The image is a screenshot or photo of an online order (for example from the Amazon, Blinkit, Zepto, BigBasket or Instamart app) or a shop bill. Read every product line.',
+    'Classify each product as grocery (food or drink eaten at home) or not, estimate shelf_life_days for groceries from the order date as stored in an Indian home, and follow the same rules as a careful grocery assistant.',
+    'Reply with only JSON: {"orders":[{"ref":"' + ref + '","store":"store name or null","order_date":"YYYY-MM-DD or null","is_order":true,"items":[{"name":"","is_grocery":true,"why":"","category":"","quantity":1,"unit":"","storage":"fridge","shelf_life_days":5,"confidence":"medium","price_inr":null}]}]}',
+    'category must be one of: ' + CAT_LIST + '. storage: fridge | freezer | pantry. If the image is not an order or bill, return is_order=false and no items.',
+  ].join('\n');
+}
+function labelPrompt() {
+  return [
+    'This photo shows the packaging of a grocery product, usually an Indian label. Today is ' + todayISO() + '.',
+    'Find the product name and the dates printed on it. Rules:',
+    '- Prefer an explicit "Use by", "Expiry", "Exp", "Best before <date>" date. Indian labels usually write dates as DD/MM/YY or DD/MM/YYYY; a date with only month and year means the last day of that month for expiry.',
+    '- If the label says "Best before N months/days from manufacture/packing" and shows "Mfd", "Mfg", "Pkd" or "Packed on", compute expiry = that date + the period (first day of the month if only month/year is printed).',
+    '- If no date can be read, set expiry_date to null and how="not_found". Do not invent a date.',
+    'Reply with only JSON: {"product_name":"","category":"one of: ' + CAT_LIST + '","storage":"fridge | freezer | pantry","expiry_date":"YYYY-MM-DD or null","date_text":"the exact date text you read","how":"read | computed | not_found","confidence":"high | medium | low","note":"one short sentence for the user"}',
+  ].join('\n');
+}
+function inventoryLines(list) {
+  return list.slice(0, 120).map((it) => {
+    const d = daysLeft(it);
+    return '- ' + it.name + (it.qty ? ' (' + it.qty + ' ' + (it.unit || '') + ')' : '') + ' — ' + (d === null ? 'no date' : d < 0 ? 'EXPIRED ' + (-d) + ' days ago' : d + ' days left') + ', ' + (STORAGE[it.storage] || 'Fridge');
+  }).join('\n') || '(nothing)';
+}
+function radarLines() {
+  const r = radar().slice(0, 15);
+  return r.length ? r.map((x) => '- ' + x.name + ': usually bought every ~' + x.every + ' days, last bought ' + x.since + ' days ago' + (x.active ? ' (some still at home)' : ' (none left at home)')).join('\n') : '(not enough purchase history yet)';
+}
+
+
+/* ---------- icons (drawn for this app: 24px grid, 1.8 stroke) ---------- */
+const I = {
+  fridge: 'M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM5 10h14M9 6v1.5M9 13v3',
+  orders: 'M5 8h14l-1.1 11.6a1.6 1.6 0 0 1-1.6 1.4H7.7a1.6 1.6 0 0 1-1.6-1.4zM9 10V7a3 3 0 0 1 6 0v3',
+  recipes: 'M3 12h18M5 12c0 4 3.1 7 7 7s7-3 7-7M9.5 8.5c-.8-1 .8-1.8 0-3M14.5 8.5c-.8-1 .8-1.8 0-3',
+  plan: 'M4.5 5h15A1.5 1.5 0 0 1 21 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-11A1.5 1.5 0 0 1 4.5 5zM3 9.5h18M7 15h4',
+  add: 'M12 5v14M5 12h14',
+  close: 'M6 6l12 12M18 6L6 18',
+  check: 'M5 12.5l4.5 4.5L19 7.5',
+  remove: 'M7 12h10',
+  search: 'M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14zM20 20l-4-4',
+  used: 'M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM8 12.5l3 3 5-6',
+  bin: 'M4 7h16M9.5 7V4.5h5V7M6 7l1 12.5a1.5 1.5 0 0 0 1.5 1.5h7a1.5 1.5 0 0 0 1.5-1.5L18 7M10 11v6M14 11v6',
+  edit: 'M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4',
+  mail: 'M4.5 5.5h15A1.5 1.5 0 0 1 21 7v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17V7a1.5 1.5 0 0 1 1.5-1.5zM3.5 7l8.5 6.5L20.5 7',
+  camera: 'M4 8h3l1.8-2.5h6.4L17 8h3v11H4zM12 10a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7z',
+  image: 'M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM4 16l5-5 4 4 2-2 5 5M15.5 8.5h.01',
+  paste: 'M8 5H6.5A1.5 1.5 0 0 0 5 6.5v13A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-13A1.5 1.5 0 0 0 17.5 5H16M9 3h6v4H9z',
+  lock: 'M6.5 11h11a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-8a.5.5 0 0 1 .5-.5zM8.5 11V8a3.5 3.5 0 0 1 7 0v3',
+  chevron: 'M10 6l6 6-6 6',
+};
+const ic = (name, cls) => '<svg class="ic' + (cls ? ' ' + cls : '') + '" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="' + I[name] + '"/></svg>';
+
+/* ---------- drawings: one per grocery category (ink line + one soft tint; colour stays reserved for expiry) ---------- */
+const ART = {
+  'Dairy & eggs': '<path class="tf" d="M11 15h18v19H11z"/><path class="ln" d="M15 5h10v3H15zM15 8l-4 7h18l-4-7M11 15v19h18V15M11 22h18"/><ellipse class="pp" cx="30.5" cy="29.5" rx="4.6" ry="5.6"/><ellipse class="ln" cx="30.5" cy="29.5" rx="4.6" ry="5.6"/>',
+  'Vegetables & herbs': '<path class="tf" d="M9 32c-1-1.5-.4-3 1-4l14-12.5c2.5-2 6-1 6.5 2 .3 1.8-.5 3.1-1.9 4.3L13 32.5c-1.4.9-3 .7-4-.5z"/><path class="ln" d="M9 32c-1-1.5-.4-3 1-4l14-12.5c2.5-2 6-1 6.5 2 .3 1.8-.5 3.1-1.9 4.3L13 32.5c-1.4.9-3 .7-4-.5zM16 25.5l2.2 2M20.5 21.8l2.2 2M12.8 29l1.4 1.3M27 15c-1-4.5.5-8 3-10M28.5 15.5c2.5-4 6-5.5 8-5M29.5 17c4-1 6.5 0 7.5 1.5"/>',
+  'Fruit': '<path class="tf" d="M13.5 31.5c-6-4-6-14 0-19 5-4 13-3.2 16.5 2.5 3.4 5.8.5 13.8-5.5 16.8-3.5 1.7-7.7 1.7-11-.3z"/><path class="pp" d="M25.8 7.6c3.2-3.2 7.7-3 9.2-.1-3.2 2.3-6.6 2.3-9.2.1z"/><path class="ln" d="M13.5 31.5c-6-4-6-14 0-19 5-4 13-3.2 16.5 2.5 3.4 5.8.5 13.8-5.5 16.8-3.5 1.7-7.7 1.7-11-.3zM24 10.6c.3-2.1 1.3-3.6 3-4.6M25.8 7.6c3.2-3.2 7.7-3 9.2-.1-3.2 2.3-6.6 2.3-9.2.1zM13 20c.3-2.5 1.6-4.4 3.5-5.6"/>',
+  'Bakery': '<path class="tf" d="M11 19c-1.4-5.5 2.5-10.5 9-10.5S30.4 13.5 29 19c-.4 1.4-1.5 2-1.5 3v10.5h-15V22c0-1-1.1-1.6-1.5-3z"/><path class="pp" d="M15.5 22.5c-.9-3.9 1.3-9.5 4.5-9.5s5.4 5.6 4.5 9.5V29h-9z"/><path class="ln" d="M11 19c-1.4-5.5 2.5-10.5 9-10.5S30.4 13.5 29 19c-.4 1.4-1.5 2-1.5 3v10.5h-15V22c0-1-1.1-1.6-1.5-3zM15.5 22.5c-.9-3.9 1.3-9.5 4.5-9.5s5.4 5.6 4.5 9.5V29h-9z"/><circle class="dot" cx="18.5" cy="19" r=".9"/><circle class="dot" cx="21.8" cy="21.5" r=".9"/><circle class="dot" cx="19" cy="25.5" r=".9"/>',
+  'Meat & fish': '<path class="tf" d="M7 20c4-6.5 14.5-7.5 20.5-1.5l6-5.5v14l-6-5.5C21.5 27.5 11 26.5 7 20z"/><path class="ln" d="M7 20c4-6.5 14.5-7.5 20.5-1.5l6-5.5v14l-6-5.5C21.5 27.5 11 26.5 7 20zM16.5 15c-1.5 3-1.5 7 0 10M20.5 18c1 1 1 3 0 4M24 18.6c.8.8.8 2.6 0 3.4"/><circle class="dot" cx="12.3" cy="18.6" r="1.3"/>',
+  'Staples': '<path class="tf" d="M13 13c-3.5 6-4.5 15-1.5 20 5.5 2 11.5 2 17 0 3-5 2-14-1.5-20z"/><path class="pp" d="M14.5 13l-2-6.5c4.5 2 10.5 2 15 0l-2 6.5z"/><path class="ln" d="M13 13c-3.5 6-4.5 15-1.5 20 5.5 2 11.5 2 17 0 3-5 2-14-1.5-20M13 13c4 1.5 10 1.5 14 0M14.5 13l-2-6.5c4.5 2 10.5 2 15 0l-2 6.5M20 31V20.5M20 23.5l-3-2.5M20 23.5l3-2.5M20 27.5l-3-2.5M20 27.5l3-2.5"/>',
+  'Spices & sauces': '<path class="tf" d="M27.5 10c4 6 3 15.5-6.5 20.5-5.5 2.7-11 2.5-13.5 0 6.5-.7 12-5 15-12.5 1.1-3 2.5-6 5-8z"/><path class="ln" d="M27.5 10c4 6 3 15.5-6.5 20.5-5.5 2.7-11 2.5-13.5 0 6.5-.7 12-5 15-12.5 1.1-3 2.5-6 5-8zM27.5 10c.5-2.5 2-4 4.5-4M24.6 12.4c1.4-2.8 4-3.4 6-1.8M25.5 16.5c-.6 3.8-2.4 7-5.3 9.5"/>',
+  'Snacks & sweets': '<path class="pp" d="M13 20L6 14.5v11zM27 20l7-5.5v11z"/><circle class="tf" cx="20" cy="20" r="7"/><path class="ln" d="M13 20L6 14.5v11zM27 20l7-5.5v11zM17.5 14c2 3 2 9 0 12M22.5 14c2 3 2 9 0 12"/><circle class="ln" cx="20" cy="20" r="7"/>',
+  'Drinks': '<path class="tf" d="M12.3 18h15.4l-1.2 15.5h-13z"/><path class="ln" d="M11.5 11h17l-2 22.5h-13zM12.3 18h15.4M21 27l3.5-21.5H29"/>',
+  'Frozen': '<path class="tf" d="M10 15l10-5 10 5v12l-10 5-10-5z"/><path class="ln" d="M10 15l10-5 10 5v12l-10 5-10-5zM10 15l10 5 10-5M20 20v12M13 19.5v4M15.5 21v2"/>',
+  'Ready to eat': '<rect class="pp" x="11" y="15" width="18" height="18" rx="2"/><rect class="tf" x="11" y="21" width="18" height="6"/><path class="ln" d="M13 15h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H13a2 2 0 0 1-2-2V17a2 2 0 0 1 2-2zM11 21h18M11 27h18M14 15v-4.5c0-3.5 12-3.5 12 0V15M9.5 18H11M29 18h1.5M9.5 30H11M29 30h1.5"/>',
+  'Other': '<path class="tf" d="M13 11h14c2 1.5 3 3.5 3 6v14c0 2-1.2 3-3 3H13c-1.8 0-3-1-3-3V17c0-2.5 1-4.5 3-6z"/><rect class="pp" x="13" y="19" width="14" height="8" rx="1.5"/><rect class="pp" x="14" y="6" width="12" height="5" rx="1.5"/><path class="ln" d="M13 11h14c2 1.5 3 3.5 3 6v14c0 2-1.2 3-3 3H13c-1.8 0-3-1-3-3V17c0-2.5 1-4.5 3-6zM15.5 6h9a1.5 1.5 0 0 1 1.5 1.5v2A1.5 1.5 0 0 1 24.5 11h-9A1.5 1.5 0 0 1 14 9.5v-2A1.5 1.5 0 0 1 15.5 6zM14.5 19h11a1.5 1.5 0 0 1 1.5 1.5v5a1.5 1.5 0 0 1-1.5 1.5h-11a1.5 1.5 0 0 1-1.5-1.5v-5a1.5 1.5 0 0 1 1.5-1.5z"/>',
+};
+const artSVG = (cat) => '<svg class="draw" viewBox="0 0 40 40" aria-hidden="true">' + (ART[cat] || ART.Other) + '</svg>';
+const stick = (b, x, y, s) => '<svg class="shp k-' + b + '" x="' + x + '" y="' + y + '" width="' + s + '" height="' + s + '" viewBox="0 0 44 44">' + SHAPES[b] + '</svg>';
+
+/* Larger drawings for empty and locked screens */
+const ILL = {
+  orders: '<svg class="ill draw" viewBox="0 0 180 124" aria-hidden="true"><rect class="pp" x="30" y="52" width="120" height="64" rx="6"/><path class="ln" d="M36 52h108a6 6 0 0 1 6 6v52a6 6 0 0 1-6 6H36a6 6 0 0 1-6-6V58a6 6 0 0 1 6-6z"/>' +
+    '<path class="pp" d="M50 84V16l5 4 5-4 5 4 5-4 5 4 5-4 5 4 5-4 5 4 5-4 5 4 5-4 5 4 5-4 5 4 5-4v68z"/><path class="ln" d="M50 84V16l5 4 5-4 5 4 5-4 5 4 5-4 5 4 5-4 5 4 5-4 5 4 5-4 5 4 5-4 5 4 5-4v68M68 33h36M112 33h8M68 47h36M112 47h8M68 61h36M112 61h8M60 61h44"/>' +
+    stick('fresh', 56, 27, 12) + stick('week', 56, 41, 12) +
+    '<path class="tf" d="M30 62l60 32 60-32v48a6 6 0 0 1-6 6H36a6 6 0 0 1-6-6z"/><path class="ln" d="M30 62l60 32 60-32"/></svg>',
+  recipes: '<svg class="ill draw" viewBox="0 0 180 124" aria-hidden="true"><path class="ln" d="M72 40c-4-6 4-10 0-18M92 38c-4-6 4-10 0-18M112 40c-4-6 4-10 0-18"/>' +
+    '<circle class="pp" cx="72" cy="58" r="9"/><circle class="ln" cx="72" cy="58" r="9"/><path class="ln" d="M72 49c0-3 2-4 4-4"/>' +
+    '<path class="pp" d="M96 64c2-10 12-15 19-11-4 7-11 11-19 11z"/><path class="ln" d="M96 64c2-10 12-15 19-11-4 7-11 11-19 11zM100 61c4-3 8-5 12-6"/>' +
+    '<path class="tf" d="M30 64h120c0 26-26 42-60 42S30 90 30 64z"/><path class="ln" d="M30 64h120c0 26-26 42-60 42S30 90 30 64zM24 64h132M30 68c-10 0-12 10-4 12M150 68c10 0 12 10 4 12M76 106l-4 8h36l-4-8"/></svg>',
+};
+
+/* The fridge: every item on the list drawn as its sticker, on the shelf where it is kept */
+function fridgeSVG(list, cls) {
+  const S = 15, STEP = 17, X0 = 14, PER = 6;
+  const urg = (i) => { const d = daysLeft(i); return d === null ? 99999 : d; };
+  const z = { top: [], freezer: [], s1: [], s2: [], crisper: [] };
+  const shelves = [];
+  list.slice().sort((a, b) => urg(a) - urg(b)).forEach((it) => {
+    if (it.storage === 'pantry') z.top.push(it);
+    else if (it.storage === 'freezer') z.freezer.push(it);
+    else if (/^(Vegetables|Fruit)/.test(it.category) && z.crisper.length < PER) z.crisper.push(it);
+    else shelves.push(it);
+  });
+  // Fill the bottom row of each shelf first, then the rows above, so both shelves get used.
+  shelves.forEach((it, k) => { const tgt = k < PER ? z.s1 : k < PER * 2 ? z.s2 : (k % 2 ? z.s2 : z.s1); tgt.push(it); });
+  const place = (items, bottom, rows) => {
+    let h = '';
+    const cap = PER * rows;
+    items.slice(0, cap).forEach((it, k) => {
+      const r = Math.floor(k / PER), c = k % PER;
+      const x = X0 + c * STEP, y = bottom - S - 2 - r * (S + 2);
+      if (k === cap - 1 && items.length > cap) h += '<text x="' + (x + 1) + '" y="' + (y + 11.5) + '">+' + (items.length - cap + 1) + '</text>';
+      else h += stick(band(it), x, y, S);
+    });
+    return h;
+  };
+  const counts = {}; list.forEach((i) => { const b = band(i); counts[b] = (counts[b] || 0) + 1; });
+  const label = list.length ? 'Your fridge: ' + BANDS.filter((b) => counts[b[0]]).map((b) => counts[b[0]] + ' ' + b[1].toLowerCase()).join(', ') : 'An empty fridge';
+  return '<svg class="draw ' + (cls || 'fridge') + '" viewBox="0 0 132 200" role="img" aria-label="' + esc(label) + '">' +
+    '<rect class="pp" x="4" y="44" width="124" height="148" rx="10"/>' +
+    '<path class="sk" d="M4 54a10 10 0 0 1 10-10h104a10 10 0 0 1 10 10v26H4z"/>' +
+    '<rect class="tf" x="10" y="158" width="112" height="28" rx="5"/>' +
+    '<path class="ln" d="M14 44h104a10 10 0 0 1 10 10v128a10 10 0 0 1-10 10H14a10 10 0 0 1-10-10V54a10 10 0 0 1 10-10zM4 80h124M10 116h112M10 152h112M15 158h102a5 5 0 0 1 5 5v18a5 5 0 0 1-5 5H15a5 5 0 0 1-5-5v-18a5 5 0 0 1 5-5zM18 192v5M114 192v5"/>' +
+    place(z.top, 44, 2) + place(z.freezer, 80, 2) + place(z.s1, 116, 2) + place(z.s2, 152, 2) + place(z.crisper, 182, 1) +
+    '</svg>';
+}
+
+/* ---------- snackbar / sheets ---------- */
+let toastT = null;
+function toast(msg, undoJSON) {
+  const t = $('#toast');
+  t.innerHTML = '<span>' + esc(msg) + '</span>' + (undoJSON ? '<button type="button" id="undoBtn">Undo</button>' : '');
+  t.hidden = false;
+  if (undoJSON) $('#undoBtn').onclick = () => { restore(undoJSON); t.hidden = true; };
+  clearTimeout(toastT);
+  toastT = setTimeout(() => { t.hidden = true; }, undoJSON ? 7000 : 4000);
+}
+let sheetOnClose = null;
+function openSheet(html, onMount, onClose, opts) {
+  const s = $('#sheet');
+  $('#toast').hidden = true; clearTimeout(toastT);
+  const full = !!(opts && opts.full);
+  s.classList.toggle('full', full);
+  $('#sheetPanel').innerHTML = (full ? '' : '<div class="grab" aria-hidden="true"></div>') + html;
+  s.hidden = false;
+  sheetOnClose = onClose || null;
+  if (onMount) onMount($('#sheetPanel'));
+  const f = $('#sheetPanel').querySelector('[autofocus]') || $('#sheetPanel').querySelector('button');
+  if (f) f.focus({ preventScroll: true });
+}
+function closeSheet() { $('#sheet').hidden = true; $('#sheetPanel').innerHTML = ''; UI.labelNote = ''; if (sheetOnClose) { const f = sheetOnClose; sheetOnClose = null; f(); } }
+const dlgBar = (title) => '<div class="dlg-bar"><h2>' + esc(title) + '</h2><button class="icon-btn" type="button" data-act="close" aria-label="Close">' + ic('close') + '</button></div>';
+
+/* ---------- navigation ---------- */
+const TABS = [['fridge', 'Fridge', 'fridge', false], ['orders', 'Orders', 'orders', true], ['recipes', 'Recipes', 'recipes', true], ['plan', 'Plan', 'plan', false]];
+const TITLES = { fridge: 'Grocery Tracker', orders: 'Orders', recipes: 'Recipes', plan: 'Plan and settings' };
+function renderTabs() {
+  $('#tabs').innerHTML = TABS.map((t) => '<button class="tab' + (UI.tab === t[0] ? ' on' : '') + '" type="button" data-act="tab" data-tab="' + t[0] + '"' + (UI.tab === t[0] ? ' aria-current="page"' : '') + '>' + ic(t[2]) + '<span class="lbl">' + t[1] + (t[3] && !isPaid() ? ic('lock') : '') + '</span></button>').join('');
+  $('#title').textContent = TITLES[UI.tab] || 'Grocery Tracker';
+  $('#planTag').hidden = !isPaid();
+  $('#addBtn').hidden = !(UI.ready && UI.tab === 'fridge' && active().length > 0);
+}
+function go(tab) { UI.tab = tab; UI.jobErr = ''; render(); window.scrollTo({ top: 0 }); }
+
+/* ---------- views ---------- */
+function render() {
+  renderTabs();
+  if (!UI.ready) return;
+  const v = $('#view');
+  const fn = { fridge: vFridge, orders: vOrders, recipes: vRecipes, plan: vPlan }[UI.tab] || vFridge;
+  v.innerHTML = fn();
+  afterRender();
+}
+function jobHTML() {
+  if (UI.job) return '<div class="job" role="status"><span class="spin" aria-hidden="true"></span><p>' + esc(UI.job.label) + '</p>' + (UI.job.ctl ? '<button class="btn text" type="button" data-act="stop">Stop</button>' : '') + '</div>';
+  if (UI.jobErr) return '<p class="err" role="alert" style="padding-block:8px">' + esc(UI.jobErr) + '</p>';
+  return '';
+}
+const secH = (title, right) => '<h3 class="sec-h"><span>' + esc(title) + '</span>' + (right || '') + '</h3>';
+function locked(ill, title, text) {
+  return '<div class="empty">' + ILL[ill] + '<h2>' + esc(title) + '</h2><p>' + esc(text) + '</p><button class="btn" type="button" data-act="tab" data-tab="plan">See the Paid plan</button></div>';
+}
+const SECTION = { expired: 'Past its date', week: 'Use within a week', month: 'Use within a month', fresh: 'Keeps for over a month', none: 'No reliable date' };
+const WHERE = { fridge: 'in the fridge', freezer: 'in the freezer', pantry: 'on the shelf' };
+
+function vFridge() {
+  const act = active();
+  if (!act.length) {
+    return '<div class="empty">' + fridgeSVG([], 'ill fridge') + '<h2>Your fridge list is empty</h2><p>Add what you bought. Each item gets a sticker for how soon it needs using, and the list sorts itself.</p><button class="btn" type="button" data-act="add">' + ic('add') + 'Add an item</button><button class="btn text" type="button" data-act="load-audit">Try it with sample items</button></div>';
+  }
+  const counts = { expired: 0, week: 0, month: 0, fresh: 0, none: 0 };
+  act.forEach((i) => counts[band(i)]++);
+  const urgent = counts.expired ? { n: counts.expired, t: counts.expired === 1 ? 'item is past its date' : 'items are past their date', b: 'expired' } : counts.week ? { n: counts.week, t: 'to use this week', b: 'week' } : null;
+  const cook = urgent && urgent.b === 'week' && isPaid();
+  const mStart = todayISO().slice(0, 7);
+  const closed = ST.items.filter((i) => i.closedAt && new Date(i.closedAt).toISOString().slice(0, 7) === mStart);
+  const wasted = closed.filter((i) => i.status === 'wasted');
+  const used = closed.filter((i) => i.status === 'used');
+  const rupees = wasted.reduce((s, i) => s + (i.price || 0), 0);
+
+  let h = '<section class="hero" aria-label="Summary"><div class="hero-t">' +
+    (urgent ? '<span class="big b-' + urgent.b + '">' + urgent.n + '</span><p class="lead">' + urgent.t + '</p>' : '<span class="big">' + act.length + '</span><p class="lead">' + (act.length === 1 ? 'item' : 'items') + ', nothing due this week</p>') +
+    (urgent ? (cook ? '<button class="btn" type="button" data-act="cook-soon">Cook with these</button>' : '<button class="btn outline" type="button" data-act="filter" data-band="' + urgent.b + '">Show ' + (urgent.n === 1 ? 'it' : 'them') + '</button>') : '') + '</div>' +
+    fridgeSVG(act) +
+    '<p class="tally"><span>This month</span><span><b>' + used.length + '</b> used up</span><span><b>' + wasted.length + '</b> thrown away</span>' + (rupees ? '<span><b>₹' + rupees.toLocaleString('en-IN') + '</b> wasted</span>' : '') + '</p></section>';
+
+  const key = (k, label, n, title) => '<button type="button" class="key k-' + k + (UI.filter === k ? ' on' : '') + '" data-act="filter" data-band="' + k + '" aria-pressed="' + (UI.filter === k) + '"' + (title ? ' title="' + esc(title) + '"' : '') + '>' + (k === 'all' ? '' : shapeSVG(k)) + esc(label) + ' <span class="n">' + n + '</span></button>';
+  h += '<div class="tools"><div class="keys" role="group" aria-label="Colour key, tap to filter">' + key('all', 'All', act.length) + BANDS.map((b) => key(b[0], b[1], counts[b[0]], b[2])).join('') + '</div>';
+  h += '<label class="search">' + ic('search') + '<input type="search" id="q" placeholder="Search your list" value="' + esc(UI.q) + '" aria-label="Search your list"></label></div>';
+
+  const q = UI.q.trim().toLowerCase();
+  const shown = act.filter((i) => (UI.filter === 'all' || band(i) === UI.filter) && (!q || i.name.toLowerCase().includes(q) || i.category.toLowerCase().includes(q)));
+  const sortKey = (i) => { const d = daysLeft(i); return d === null ? 99999 : d; };
+  if (!shown.length) h += '<p class="note" style="padding-top:24px">No items match.</p>';
+  for (const b of BANDS) {
+    const list = shown.filter((i) => band(i) === b[0]).sort((x, y) => sortKey(x) - sortKey(y) || x.name.localeCompare(y.name));
+    if (!list.length) continue;
+    h += '<section><h3 class="sec-h band-h"><span class="k-' + b[0] + '">' + shapeSVG(b[0]) + '</span><span>' + esc(SECTION[b[0]]) + '</span><span class="c">' + list.length + '</span></h3><ul class="list">' + list.map(rowHTML).join('') + '</ul></section>';
+  }
+  h += '<p class="foot">Tap an item, or press and hold it, to mark it used up or thrown away.' + (act.some((i) => i.sample) ? '<br><button class="btn text" type="button" data-act="clear-samples">Remove sample items</button>' : '') + '</p>';
+  return h;
+}
+function rowHTML(it) {
+  const d = daysLeft(it);
+  const qty = it.qty ? it.qty + (it.unit ? ' ' + it.unit : '') : '';
+  const where = WHERE[it.storage] || WHERE.fridge;
+  let line = esc(qty ? qty + ' ' + where : where.charAt(0).toUpperCase() + where.slice(1));
+  if (d !== null && d < 0) line += ', <span class="bad">expired ' + esc(fmtShort(it.expiry)) + '</span>';
+  else if (d !== null) line += ', ' + (it.expirySource === 'ai' ? 'about ' : 'use by ') + esc(fmtShort(it.expiry));
+  if (it.sample) line += ', sample';
+  return '<li><button type="button" class="it" data-act="item" data-id="' + it.id + '"><span class="art">' + artSVG(it.category) + '</span><span><span class="nm">' + esc(it.name) + '</span><span class="sp">' + line + '</span></span>' + tagHTML(it) + '</button></li>';
+}
+
+function itemForm(it, mode) {
+  it = it || {};
+  const opt = (arr, v) => arr.map((a) => { const [val, lab] = Array.isArray(a) ? a : [a, a]; return '<option value="' + esc(val) + '"' + (val === v ? ' selected' : '') + '>' + esc(lab) + '</option>'; }).join('');
+  return '<form id="itemForm" class="form" novalidate>' +
+    '<label class="field"><span>Product name</span><input type="text" id="f-name" required maxlength="80" placeholder="e.g. Amul toned milk" value="' + esc(it.name || '') + '" autocomplete="off"></label>' +
+    '<div class="inline"><label class="field"><span>Expiry or best-before date</span><input type="date" id="f-expiry" value="' + esc(it.expiry || '') + '"></label><button class="btn text" type="button" data-act="suggest">Suggest</button></div>' +
+    '<p class="hint" id="f-hint">' + esc(UI.labelNote || 'Use the date printed on the pack. For fresh food, Suggest fills in a typical date.') + '</p>' +
+    '<label class="check"><input type="checkbox" id="f-noexp"' + (mode === 'edit' && !it.expiry ? ' checked' : '') + '>No reliable date (shown as white)</label>' +
+    '<div class="grid2"><label class="field"><span>Category</span><select id="f-cat">' + opt(CATS, it.category || 'Dairy & eggs') + '</select></label>' +
+    '<label class="field"><span>Kept in</span><select id="f-storage">' + opt(Object.entries(STORAGE), it.storage || 'fridge') + '</select></label></div>' +
+    '<div class="grid3"><label class="field"><span>Quantity</span><input type="number" id="f-qty" inputmode="decimal" min="0" step="any" value="' + esc(it.qty == null ? '' : it.qty) + '"></label>' +
+    '<label class="field"><span>Unit</span><input type="text" id="f-unit" maxlength="12" placeholder="kg, L, pcs" value="' + esc(it.unit || '') + '"></label>' +
+    '<label class="field"><span>Price (₹)</span><input type="number" id="f-price" inputmode="decimal" min="0" step="any" value="' + esc(it.price == null ? '' : it.price) + '"></label></div>' +
+    '<div class="grid2"><label class="field"><span>Bought on</span><input type="date" id="f-purchased" value="' + esc(it.purchased || todayISO()) + '"></label>' +
+    '<label class="field"><span>Bought from</span><select id="f-store">' + opt([''].concat(STORES).map((s) => [s, s || 'Not set']), it.store || '') + '</select></label></div>' +
+    '<p class="err" id="f-err" hidden></p>' +
+    '</form>';
+}
+function readForm(root) {
+  const g = (id) => { const el = $('#' + id, root); return el ? (el.type === 'checkbox' ? el.checked : el.value) : ''; };
+  return { name: g('f-name'), category: g('f-cat'), storage: g('f-storage'), qty: g('f-qty'), unit: g('f-unit'), price: g('f-price'), purchased: g('f-purchased'), store: g('f-store'), expiry: g('f-noexp') ? '' : g('f-expiry'), noexp: g('f-noexp') };
+}
+function openAdd() {
+  UI.labelNote = '';
+  const scan = isPaid()
+    ? '<label class="btn outline wide" for="labelFile">' + ic('camera') + 'Read the date from a photo</label><input id="labelFile" type="file" accept="image/*" capture="environment" hidden><div id="dlgJob"></div>'
+    : '<p class="note" style="display:flex;gap:8px;align-items:center">' + ic('lock', '') + 'Paid plan: read the date from a photo of the pack.</p>';
+  openSheet(dlgBar('Add item') +
+    '<div class="dlg-body"><h3 class="sec-h" style="padding-top:0">Common items</h3><div class="chips">' + QUICK.map((q) => '<button class="chip" type="button" data-act="quick" data-name="' + esc(q) + '">' + esc(q) + '</button>').join('') + '</div>' +
+    '<div style="padding-block:16px 8px">' + scan + '</div>' + itemForm(null, 'add') + '</div>' +
+    '<div class="dlg-foot"><button class="btn wide" type="submit" form="itemForm">Save</button></div>',
+    (root) => {
+      wireItemForm($('#itemForm', root), null);
+      const lf = $('#labelFile', root); if (lf) lf.onchange = () => { const f = lf.files && lf.files[0]; lf.value = ''; if (f) scanLabel(f); };
+    }, null, { full: true });
+}
+function openEdit(id) {
+  const it = ST.items.find((i) => i.id === id); if (!it) return;
+  UI.labelNote = '';
+  openSheet(dlgBar('Edit item') + '<div class="dlg-body">' + itemForm(it, 'edit') + '</div><div class="dlg-foot"><button class="btn wide" type="submit" form="itemForm">Save changes</button></div>',
+    (root) => wireItemForm($('#itemForm', root), id), null, { full: true });
+}
+
+function vOrders() {
+  if (!isPaid()) return locked('orders', 'Add online orders automatically', 'With the Paid plan, the assistant reads order emails from Amazon, Blinkit, Zepto, BigBasket and others, keeps only the food, and adds each item with its expiry date.');
+  let h = jobHTML();
+  const g = P.gmail;
+  const gOK = g && g.available();
+  h += secH('Order emails');
+  const who = ST.gmailLinked ? (ST.gmailEmail || (g && g.accountNote) || 'Connected') : 'Not connected';
+  h += '<div class="row">' + ic('mail') + '<div class="t">Gmail<small class="acct">' + esc(who) + '</small>' + (ST.gmailLinked && ST.lastSync ? '<small>Last checked ' + ago(ST.lastSync) + '</small>' : '') + '</div></div>';
+  if (gOK) {
+    const off = UI.job ? ' disabled' : '';
+    h += '<button class="btn wide" type="button" data-act="sync"' + off + '>' + (ST.gmailLinked ? 'Check for new orders' : 'Connect Gmail') + '</button>';
+    if (ST.gmailLinked) h += '<div class="btn-row"><button class="btn outline" type="button" data-act="gmail-change"' + off + '>Change account</button><button class="btn text" type="button" data-act="gmail-off"' + off + '>Disconnect</button></div>';
+    h += '<label class="row" style="margin-top:8px"><div class="t">Check when the app opens<small>Looks at order emails from the last 30 days</small></div><input type="checkbox" class="switch" id="autoSync"' + (ST.settings.autoSync ? ' checked' : '') + '></label>';
+  } else {
+    h += '<p class="note">' + esc((g && g.setupHint) || 'Email import is not set up in this version.') + '</p>';
+  }
+  h += secH('Paste an order');
+  h += '<div class="stack"><textarea id="pasteBox" aria-label="Order details" placeholder="Paste the order details from a shopping app or email">' + esc(UI.paste) + '</textarea><button class="btn" type="button" data-act="paste-run" style="align-self:flex-start"' + (UI.job ? ' disabled' : '') + '>Find groceries</button></div>';
+  h += secH('Other ways to add');
+  h += '<label class="row link" for="shotFile">' + ic('image') + '<div class="t">Screenshot or shop bill<small>Choose a photo of the order</small></div>' + ic('chevron') + '</label><input id="shotFile" type="file" accept="image/*" hidden>';
+  h += '<button class="row link" type="button" data-act="sample-sync"' + (UI.job ? ' disabled' : '') + '>' + ic('orders') + '<div class="t">Try sample Amazon orders<small>Three orders mixing food with other things</small></div>' + ic('chevron') + '</button>';
+  if (ST.imports.length) {
+    h += secH('Recent imports', '<span class="acts-inline"><button class="btn text" type="button" data-act="clear-log">Clear</button></span>');
+    h += ST.imports.slice(0, 25).map(logHTML).join('');
+  }
+  return h;
+}
+function logHTML(L) {
+  let h = '<div class="imp-h"><b>' + esc(L.title) + '</b><span>' + esc(L.via) + ', ' + ago(L.at) + '</span></div>';
+  if (!L.items.length) return h + '<p class="note" style="padding-block:8px">' + esc(L.note || 'No products found.') + '</p>';
+  return h + '<ul class="dec">' + L.items.map((x, k) => {
+    const it = x.itemId && ST.items.find((i) => i.id === x.itemId);
+    if (x.grocery) {
+      const sub = it ? (it.expiry ? 'Added, expires ' + fmtShort(it.expiry) + ' (estimate)' : 'Added, no date') : 'Removed';
+      return '<li class="yes">' + ic('check') + '<span><span class="nm">' + esc(x.name) + '</span><small>' + esc(sub) + '</small></span>' + (it && it.status === 'active' ? '<button class="btn text" type="button" data-act="log-remove" data-id="' + it.id + '">Remove</button>' : '<span></span>') + '</li>';
+    }
+    return '<li class="no">' + ic('remove') + '<span><span class="nm">' + esc(x.name) + '</span><small>Skipped: ' + esc(x.why || 'not food') + '</small></span><button class="btn text" type="button" data-act="log-add" data-log="' + esc(L.id) + '" data-k="' + k + '">Add</button></li>';
+  }).join('') + '</ul>';
+}
+
+function vRecipes() {
+  if (!isPaid()) return locked('recipes', 'Cook with what you have', 'With the Paid plan, pick ingredients from your list and get a recipe that uses the ones expiring first, plus a clear answer on whether you need to order more.');
+  const act = active().slice().sort((a, b) => { const da = daysLeft(a), db = daysLeft(b); return (da === null ? 9999 : da) - (db === null ? 9999 : db); });
+  if (!act.length) return '<div class="empty">' + ILL.recipes + '<h2>No ingredients yet</h2><p>Add groceries to your list first, then pick some here to cook with.</p><button class="btn" type="button" data-act="tab" data-tab="fridge">Go to your list</button></div>';
+  for (const id of Array.from(UI.pick)) if (!act.some((i) => i.id === id)) UI.pick.delete(id);
+  let h = secH(UI.pick.size ? pl(UI.pick.size, 'ingredient') + ' picked' : 'Pick ingredients', '<span class="acts-inline"><button class="btn text" type="button" data-act="pick-soon">Expiring first</button><button class="btn text" type="button" data-act="pick-none">Clear</button></span>');
+  h += '<div class="chips">' + act.map((i) => { const on = UI.pick.has(i.id); return '<button type="button" class="chip k-' + band(i) + (on ? ' on' : '') + '" data-act="pick" data-id="' + i.id + '" aria-pressed="' + on + '">' + (on ? ic('check') : shapeSVG(band(i))) + esc(i.name) + '</button>'; }).join('') + '</div>';
+  h += '<div class="grid2" style="padding-block:20px 16px"><label class="field"><span>Meal</span><select id="r-meal">' + ['Any meal', 'Breakfast', 'Lunch', 'Dinner', 'Snack', 'Tiffin'].map((m) => '<option' + (UI.rMeal === m ? ' selected' : '') + '>' + m + '</option>').join('') + '</select></label>' +
+    '<label class="field"><span>Diet</span><select id="r-diet">' + ['Vegetarian', 'Eggetarian', 'Non-vegetarian', 'Vegan', 'Jain'].map((m) => '<option' + ((UI.rDiet || ST.settings.diet) === m ? ' selected' : '') + '>' + m + '</option>').join('') + '</select></label>' +
+    '<label class="field"><span>Servings</span><input type="number" id="r-serv" min="1" max="12" value="' + esc(UI.rServ || ST.settings.household) + '"></label>' +
+    '<label class="field"><span>Cooking time</span><select id="r-time">' + ['15', '30', '45', '60'].map((m) => '<option value="' + m + '"' + ((UI.rTime || '30') === m ? ' selected' : '') + '>Up to ' + m + ' min</option>').join('') + '</select></label></div>';
+  h += '<button class="btn wide" type="button" data-act="recipe"' + (UI.job || !UI.pick.size ? ' disabled' : '') + '>' + (UI.recipe ? 'Suggest a different recipe' : 'Suggest a recipe') + '</button>';
+  h += jobHTML();
+  if (UI.recipe) h += recipeHTML(UI.recipe);
+  const r = radar();
+  h += secH('Do we need to shop?');
+  h += '<div class="stack"><p class="note">Checks what you have, what expires soon and what you usually buy, so nothing gets bought twice.</p><button class="btn outline" type="button" data-act="shop" style="align-self:flex-start"' + (UI.job ? ' disabled' : '') + '>Check now</button>' + (UI.shop ? verdictHTML(UI.shop, true) : '') + '</div>';
+  h += secH('Usually bought');
+  h += r.length ? '<ul class="dec">' + r.slice(0, 6).map((x) => '<li class="' + (x.due ? 'yes' : 'no') + '">' + ic(x.due ? 'orders' : 'remove') + '<span><span class="nm">' + esc(x.name) + '</span><small>About every ' + x.every + ' days, last bought ' + x.since + ' days ago</small></span><span class="note">' + (x.due ? 'Due' : '') + '</span></li>').join('') + '</ul>'
+    : '<p class="note">After a few weeks of orders, items you buy regularly show up here, with a flag when one is due.</p>';
+  return h;
+}
+function recipeHTML(R) {
+  const ing = (R.ingredients || []).map((x) => { const s = ['have', 'missing', 'staple'].includes(x.status) ? x.status : 'have'; return '<li><span>' + esc(x.amount ? x.amount + ' ' : '') + esc(x.item) + '</span><span class="st st-' + s + '">' + (s === 'missing' ? 'Buy' : s === 'have' ? 'Have' : 'Staple') + '</span></li>'; }).join('');
+  const meta = [R.time_minutes ? R.time_minutes + ' min' : '', R.servings ? 'serves ' + R.servings : '', R.difficulty ? String(R.difficulty).toLowerCase() : ''].filter(Boolean).map(esc).join(', ');
+  return '<article class="rec"><div class="rec-head"><span class="art"><svg class="draw" viewBox="24 14 132 100" aria-hidden="true">' + ILL.recipes.replace(/^<svg[^>]*>|<\/svg>$/g, '') + '</svg></span><h2>' + esc(R.title) + '</h2><p class="note">' + meta + '</p>' + (R.why_this ? '<p class="rec-why">' + esc(R.why_this) + '</p>' : '') + '</div>' +
+    '<h3 class="sec-h" style="padding-top:8px;min-height:32px">Ingredients</h3><ul class="ing">' + (ing) + '</ul>' +
+    '<h3 class="sec-h" style="padding-top:8px;min-height:32px">Method</h3><ol class="steps">' + (R.steps || []).map((s) => '<li>' + esc(s) + '</li>').join('') + '</ol>' +
+    (R.tip ? '<p class="note">Tip: ' + esc(R.tip) + '</p>' : '') +
+    (R.order_more ? verdictHTML(R.order_more, false) : '') +
+    '<button class="btn outline" type="button" data-act="cooked" style="align-self:flex-start">Mark ingredients as used</button></article>';
+}
+function verdictHTML(V, withSkip) {
+  const order = V.decision === 'order';
+  const buy = Array.isArray(V.buy) ? V.buy : [];
+  const text = buy.map((b) => '- ' + b.item + (b.amount ? ', ' + b.amount : '')).join('\n');
+  return '<div class="verdict ' + (order ? 'order' : 'no_need') + '"><span class="vd">' + (order ? 'Order more' : 'No need to order') + '</span>' + (V.headline ? '<p><b style="font-weight:500">' + esc(V.headline) + '</b></p>' : '') + (V.reason ? '<p>' + esc(V.reason) + '</p>' : '') +
+    (buy.length ? '<span class="lbl">To buy</span><ul class="buy">' + buy.map((b) => '<li>' + esc(b.item) + (b.amount ? ', ' + esc(b.amount) : '') + (b.why ? ' (' + esc(b.why) + ')' : '') + '</li>').join('') + '</ul><button class="btn text" type="button" data-act="copy" data-text="' + esc(text) + '">Copy shopping list</button>' : '') +
+    (Array.isArray(V.use_first) && V.use_first.length ? '<p><b style="font-weight:500">Use first:</b> ' + V.use_first.map(esc).join(', ') + '</p>' : '') +
+    (withSkip && Array.isArray(V.dont_buy) && V.dont_buy.length ? '<p><b style="font-weight:500">Already at home:</b> ' + V.dont_buy.map(esc).join(', ') + '</p>' : '') + '</div>';
+}
+
+function vPlan() {
+  const paid = isPaid();
+  let h = secH('Plans');
+  h += '<ul class="plans">' +
+    '<li class="plan' + (!paid ? ' cur' : '') + '">' + (!paid ? '<span class="you">Your plan</span>' : '') + '<span class="pn">Free</span><span class="pp">₹0</span><ul><li>Type in what you buy</li><li>Colour-coded expiry list</li><li>Waste tracker in rupees</li></ul></li>' +
+    '<li class="plan' + (paid ? ' cur' : '') + '">' + (paid ? '<span class="you">Your plan</span>' : '') + '<span class="pn">Paid</span><span class="pp">₹' + PRICE + '<small>a month</small></span><ul><li>Online grocery orders added automatically</li><li>Expiry dates read from a photo</li><li>Recipes from what you have</li><li>Advice on whether to order more</li></ul></li></ul>';
+  if (paid) {
+    h += '<div class="row"><div class="t">' + (ST.planInfo && ST.planInfo.via === 'override' ? 'Unlocked with the demo account' : 'Paid plan active') + '<small>' + (ST.planInfo && ST.planInfo.via === 'override' ? 'No payment was taken' : '') + '</small></div><button class="btn outline" type="button" data-act="downgrade">Switch to Free</button></div>';
+  } else {
+    h += secH('Upgrade to Paid');
+    h += '<form id="checkout" class="form" novalidate>' +
+      '<label class="field"><span>Email</span><input type="email" id="c-email" autocomplete="off" inputmode="email" required></label>' +
+      '<label class="field"><span>Password</span><input type="password" id="c-pass" autocomplete="off" required></label>' +
+      '<label class="field"><span>Card number</span><input type="text" id="c-card" inputmode="numeric" autocomplete="off" placeholder="0000 0000 0000 0000" maxlength="23" required></label>' +
+      (UI.checkoutErr ? '<p class="err" role="alert">' + esc(UI.checkoutErr) + '</p>' : '') +
+      '<button class="btn wide" type="submit">Start Paid plan, ₹' + PRICE + '/month</button>' +
+      '<p class="hint">Demo checkout. No money is taken, and card numbers are never saved or sent anywhere.' + (P.checkoutNote ? ' ' + esc(P.checkoutNote) : '') + '</p></form>';
+  }
+  const s = ST.settings;
+  h += secH('Your kitchen');
+  h += '<div class="form"><p class="note">Used to estimate expiry dates and size recipes.</p><div class="grid2"><label class="field"><span>People at home</span><input type="number" id="s-house" min="1" max="20" value="' + esc(s.household) + '"></label>' +
+    '<label class="field"><span>Usual diet</span><select id="s-diet">' + ['Vegetarian', 'Eggetarian', 'Non-vegetarian', 'Vegan', 'Jain'].map((m) => '<option' + (s.diet === m ? ' selected' : '') + '>' + m + '</option>').join('') + '</select></label></div>' +
+    '<label class="field"><span>Weather where you live</span><select id="s-climate">' + [['Hot summers and a humid monsoon (North India)', 'Hot summers, humid monsoon'], ['Hot and humid all year (coastal)', 'Hot and humid all year'], ['Hot and dry', 'Hot and dry'], ['Mild all year', 'Mild all year'], ['Cold winters', 'Cold winters']].map((m) => '<option value="' + esc(m[0]) + '"' + (s.climate === m[0] ? ' selected' : '') + '>' + m[1] + '</option>').join('') + '</select></label></div>';
+  if (P.notify) h += '<label class="row" style="margin-top:8px"><div class="t">Expiry reminders<small>A notification when something needs using this week</small></div><input type="checkbox" class="switch" id="s-remind"' + (s.remind ? ' checked' : '') + '></label>';
+  h += secH('Data');
+  h += '<p class="note">' + esc(P.storageNote ? P.storageNote() : '') + '</p>';
+  h += '<button class="row link" type="button" data-act="load-audit"><div class="t">Add sample items<small>The fridge from our 3-day audit</small></div>' + ic('chevron') + '</button>';
+  h += '<button class="row link danger" type="button" data-act="wipe">' + ic('bin') + '<div class="t">Clear everything</div></button><div id="wipeConfirm"></div>';
+  h += '<p class="foot">Grocery Tracker 1.0' + (P.name === 'artifact' ? ', test version' : '') + '<br>Made for the Grade 7 Smart Fridge Inventory project</p>';
+  return h;
+}
+
+/* ---------- wiring for inputs that aren't buttons ---------- */
+function afterRender() {
+  const q = $('#q');
+  if (q) q.oninput = () => { UI.q = q.value; const pos = q.selectionStart; render(); const n = $('#q'); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} } };
+  const sf = $('#shotFile'); if (sf) sf.onchange = () => { const f = sf.files && sf.files[0]; sf.value = ''; if (f) readScreenshot(f); };
+  const pb = $('#pasteBox'); if (pb) pb.oninput = () => { UI.paste = pb.value; };
+  const as = $('#autoSync'); if (as) as.onchange = () => { ST.settings.autoSync = as.checked; commit({ render: false }); };
+  const co = $('#checkout'); if (co) {
+    const card = $('#c-card');
+    card.oninput = () => { const d = card.value.replace(/\D/g, '').slice(0, 19); card.value = d.replace(/(.{4})/g, '$1 ').trim(); };
+    co.onsubmit = (e) => { e.preventDefault(); checkout(); };
+  }
+  ['r-meal', 'r-diet', 'r-serv', 'r-time'].forEach((id) => { const el = $('#' + id); if (el) el.onchange = () => { UI[{ 'r-meal': 'rMeal', 'r-diet': 'rDiet', 'r-serv': 'rServ', 'r-time': 'rTime' }[id]] = el.value; }; });
+  const sh = $('#s-house'); if (sh) sh.onchange = () => { ST.settings.household = clamp(parseInt(sh.value, 10) || 1, 1, 20); commit({ render: false }); };
+  const sd = $('#s-diet'); if (sd) sd.onchange = () => { ST.settings.diet = sd.value; commit({ render: false }); };
+  const sc = $('#s-climate'); if (sc) sc.onchange = () => { ST.settings.climate = sc.value; commit({ render: false }); };
+  const sr = $('#s-remind'); if (sr) sr.onchange = async () => {
+    if (sr.checked) { const ok = await P.notify.permission(); ST.settings.remind = ok; if (!ok) { sr.checked = false; toast('Notifications are blocked. Allow them for this app in your phone settings.'); } }
+    else ST.settings.remind = false;
+    commit({ render: false });
+  };
+}
+function wireItemForm(form, editing) {
+  const name = $('#f-name', form);
+  form.onsubmit = (e) => {
+    e.preventDefault();
+    const f = readForm(form);
+    const err = $('#f-err', form);
+    if (!f.name.trim()) { err.textContent = 'Enter the product name.'; err.hidden = false; name.focus(); return; }
+    if (f.expiry && !validISO(f.expiry)) { err.textContent = 'Pick a valid date, or tick “No reliable date”.'; err.hidden = false; return; }
+    const before = snapshot();
+    if (editing) {
+      const it = ST.items.find((i) => i.id === editing);
+      if (it) {
+        Object.assign(it, { name: f.name.trim().slice(0, 80), category: f.category, storage: f.storage, qty: num(f.qty), unit: f.unit, price: num(f.price), purchased: validISO(f.purchased) ? f.purchased : it.purchased, store: f.store });
+        if ((f.expiry || null) !== it.expiry) { it.expiry = f.expiry || null; it.expirySource = f.expiry ? 'manual' : 'none'; }
+      }
+      closeSheet(); commit(); toast('Changes saved', before);
+    } else {
+      const src = UI.labelNote ? 'label' : 'manual';
+      ST.items.push(makeItem(Object.assign({}, f, { expirySource: f.expiry ? (src === 'label' ? 'label' : 'manual') : 'none', source: src })));
+      closeSheet(); if (UI.tab !== 'fridge') UI.tab = 'fridge'; commit(); toast(f.name.trim() + ' added', before);
+    }
+  };
+}
+
+/* ---------- actions ---------- */
+function itemSheet(id) {
+  const it = ST.items.find((i) => i.id === id); if (!it) return;
+  const d = daysLeft(it);
+  const status = it.expiry ? (d < 0 ? 'Expired on ' + fmtDate(it.expiry) : d === 0 ? 'Expires today' : 'Expires ' + fmtDate(it.expiry) + ', in ' + pl(d, 'day')) : 'No reliable date';
+  const bought = 'Bought ' + fmtDate(it.purchased) + (it.store ? ' from ' + it.store : '') + (it.price ? ' for ₹' + it.price : '');
+  const act = (a, icon, label, cls) => '<li><button class="row' + (cls ? ' ' + cls : '') + '" type="button" data-act="' + a + '" data-id="' + id + '">' + ic(icon) + '<span class="t">' + label + '</span></button></li>';
+  openSheet('<div class="sh-head"><span class="art">' + artSVG(it.category) + '</span><div><h2>' + esc(it.name) + '</h2><p class="small muted">' + esc(status) + '</p></div>' + tagHTML(it) + '</div>' +
+    '<p class="small muted">' + esc(bought) + (it.expirySource === 'ai' ? '. The date is an estimate, so check the pack.' : '') + '</p>' +
+    '<ul class="rows" style="margin-top:8px">' + act('used', 'used', 'Used it up') + act('wasted', 'bin', 'Threw it away') + act('edit', 'edit', 'Edit details') + act('delete', 'close', 'Remove from list', 'danger') + '</ul>' +
+    '<div id="sheetExtra"></div>');
+}
+function closeItem(id, status, price) {
+  const it = ST.items.find((i) => i.id === id); if (!it) return;
+  const before = snapshot();
+  it.status = status; it.closedAt = Date.now();
+  if (price != null) it.price = price;
+  closeSheet(); commit();
+  toast(status === 'used' ? it.name + ' used up' : it.name + ' marked as thrown away' + (it.price ? ' (₹' + it.price + ')' : ''), before);
+}
+async function checkout() {
+  const email = ($('#c-email').value || '').trim().toLowerCase();
+  const pass = $('#c-pass').value || '';
+  const card = ($('#c-card').value || '').replace(/\D/g, '');
+  if (!email || !pass || card.length < 12) { UI.checkoutErr = 'Enter your email, password and card number.'; render(); return; }
+  let ok = false;
+  try {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(email + '\n' + pass + '\n' + card));
+    ok = Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, '0')).join('') === OVERRIDE_HASH;
+  } catch (e) { ok = false; }
+  if (ok) {
+    ST.plan = 'paid'; ST.planInfo = { via: 'override', email: 'PaidOverride@gmail.com', since: Date.now() };
+    UI.checkoutErr = ''; commit(); toast('Paid plan unlocked. No payment was taken.');
+  } else {
+    UI.checkoutErr = 'Card payments aren’t switched on in this demo, so nothing was charged. Only the demo account can unlock Paid for now.';
+    render();
+  }
+}
+
+/* --- assistant flows --- */
+function startJob(label, withStop) { UI.jobErr = ''; UI.job = { label, ctl: withStop ? new AbortController() : null }; render(); return UI.job; }
+function endJob(errMsg) { UI.job = null; UI.jobErr = errMsg || ''; render(); }
+function setJob(label) { if (UI.job) { UI.job.label = label; const p = $('.job p'); if (p) p.textContent = label; } }
+
+function cleanOrderItem(x) {
+  const cat = CATS.includes(x && x.category) ? x.category : 'Other';
+  const life = num(x && x.shelf_life_days);
+  return { name: String((x && x.name) || '').trim().slice(0, 80), grocery: !!(x && (x.is_grocery === true || x.is_grocery === 'true')), why: String((x && x.why) || '').slice(0, 80), category: cat, qty: num(x && x.quantity), unit: String((x && x.unit) || '').slice(0, 12), storage: STORAGE[x && x.storage] ? x.storage : (cat === 'Frozen' ? 'freezer' : 'fridge'), life: life == null ? null : clamp(Math.round(life), 0, 1500), price: num(x && x.price_inr) };
+}
+function applyOrders(result, sources, via, sourceKind) {
+  const orders = (result && Array.isArray(result.orders)) ? result.orders : [];
+  let added = 0, skipped = 0;
+  const t = todayISO();
+  sources.forEach((src, idx) => {
+    const o = orders.find((x) => x && x.ref === src.ref) || orders[idx] || { items: [], is_order: false };
+    const purchased = validISO(o.order_date) && diffDays(o.order_date, t) >= 0 && diffDays(o.order_date, t) < 60 ? o.order_date : t;
+    const items = (Array.isArray(o.items) ? o.items : []).map(cleanOrderItem).filter((x) => x.name);
+    const store = String(o.store || src.store || '').replace(/\s*\(sample\)/i, '').slice(0, 40);
+    const log = { id: uid(), at: Date.now(), via, title: (store || 'Order') + (o.order_date && validISO(o.order_date) ? ', ' + fmtShort(o.order_date) : ''), items: [], note: o.is_order === false ? 'Not an order, so nothing was added.' : '' };
+    for (const x of items) {
+      if (x.grocery) {
+        const it = makeItem({ name: x.name, category: x.category, qty: x.qty, unit: x.unit, storage: x.storage, price: x.price, purchased, store, expiry: x.life == null ? null : addDays(purchased, x.life), expirySource: x.life == null ? 'none' : 'ai', source: sourceKind });
+        ST.items.push(it); added++;
+        log.items.push({ name: x.name, grocery: true, category: x.category, itemId: it.id });
+      } else {
+        skipped++;
+        log.items.push({ name: x.name, grocery: false, why: x.why, category: x.category, qty: x.qty, unit: x.unit, storage: x.storage, price: x.price, purchased, store });
+      }
+    }
+    ST.imports.unshift(log);
+    if (!ST.seenRefs.includes(src.ref)) ST.seenRefs.push(src.ref);
+  });
+  ST.imports = ST.imports.slice(0, 30);
+  ST.seenRefs = ST.seenRefs.slice(-400);
+  return { added, skipped };
+}
+async function runOrders(sources, via, sourceKind, opts) {
+  const before = snapshot();
+  let added = 0, skipped = 0;
+  for (let i = 0; i < sources.length; i += 4) {
+    const batch = sources.slice(i, i + 4);
+    setJob('Reading ' + (sources.length > 4 ? 'orders ' + (i + 1) + '–' + Math.min(i + 4, sources.length) + ' of ' + sources.length : pl(sources.length, 'order')) + ' and sorting out the food…');
+    const res = await ask(opts && opts.prompt ? opts.prompt : ordersPrompt(batch), { signal: UI.job && UI.job.ctl ? UI.job.ctl.signal : undefined, images: opts && opts.images, fresh: true });
+    const r = applyOrders(res, batch, via, sourceKind);
+    added += r.added; skipped += r.skipped;
+    commit({ render: false });
+  }
+  return { added, skipped, before };
+}
+const addedMsg = (r, where) => r.added ? 'Added ' + pl(r.added, 'item') + (where || '') + (r.skipped ? ', skipped ' + r.skipped + ' that aren’t food' : '') : 'No groceries found' + (where || '');
+async function sampleSync() {
+  if (UI.job) return;
+  ST.seenRefs = ST.seenRefs.filter((r) => !r.startsWith('sample-'));
+  startJob('Opening the sample Amazon orders…', true);
+  try { const r = await runOrders(SAMPLE_ORDERS.map((o) => ({ ref: o.ref, store: o.store, text: o.text })), 'Sample', 'sample-order'); endJob(); toast(addedMsg(r), r.before); }
+  catch (e) { endJob(aiErr(e)); }
+}
+async function pasteRun(textOverride, auto) {
+  const text = (textOverride || UI.paste || '').trim();
+  if (!text) { UI.jobErr = 'Paste the order details first.'; render(); return; }
+  if (UI.job) return;
+  startJob('Reading your order…', true);
+  try {
+    let hsh = 0; for (let i = 0; i < text.length; i++) hsh = (hsh * 31 + text.charCodeAt(i)) | 0;
+    const r = await runOrders([{ ref: 'paste-' + (hsh >>> 0).toString(36), text }], auto ? 'Shared' : 'Pasted', 'order');
+    UI.paste = ''; endJob(); toast(addedMsg(r), r.before);
+  } catch (e) { endJob(aiErr(e)); }
+}
+async function readScreenshot(file) {
+  if (UI.job) return;
+  startJob('Reading the picture…', true);
+  try { const ref = 'shot-' + uid(); const r = await runOrders([{ ref, text: '' }], 'Photo', 'order', { prompt: screenshotPrompt(ref), images: [file] }); endJob(); toast(addedMsg(r, ' from the picture'), r.before); }
+  catch (e) { endJob(aiErr(e)); }
+}
+async function syncGmail(auto, pick) {
+  const g = P.gmail;
+  if (!g || !g.available() || UI.job) return;
+  if (!auto) startJob(pick ? 'Waiting for you to choose an account…' : 'Looking for order emails…', false); else { UI.job = { label: 'Checking your order emails…', ctl: null }; render(); }
+  try {
+    const emails = await g.fetchOrderEmails({ query: GMAIL_QUERY, max: 8, seen: ST.seenRefs, interactive: !auto, pickAccount: !!pick });
+    const prev = ST.gmailEmail;
+    ST.gmailLinked = true; ST.lastSync = Date.now();
+    if (g.account) ST.gmailEmail = g.account() || ST.gmailEmail;
+    const now = pick && ST.gmailEmail && ST.gmailEmail !== prev ? 'Now using ' + ST.gmailEmail + '. ' : '';
+    const fresh = emails.filter((e) => e && e.ref && !ST.seenRefs.includes(e.ref));
+    if (!fresh.length) { commit({ render: false }); endJob(); if (!auto) toast(now + 'No new grocery orders'); return; }
+    const r = await runOrders(fresh.map((e) => ({ ref: e.ref, text: e.text })), 'Email', 'gmail');
+    endJob(); toast(now + addedMsg(r, ' from ' + pl(fresh.length, 'email')), r.before);
+  } catch (e) {
+    if (auto) { UI.job = null; render(); return; }
+    endJob((g.errorText && g.errorText(e)) || aiErr(e));
+  }
+}
+function changeGmail() {
+  const g = P.gmail;
+  if (!g || UI.job) return;
+  if (!g.signOut) {
+    // Test version: the account belongs to the Gmail connector in Claude, so the switch happens there.
+    openSheet('<h2>Change Gmail account</h2><p class="note" style="margin:8px 0 16px">' + esc(g.switchHelp || '') + '</p>' +
+      '<ol class="steps">' + (g.switchSteps || []).map((s) => '<li>' + esc(s) + '</li>').join('') + '</ol>' +
+      '<div class="btn-row" style="margin-top:20px"><button class="btn" type="button" data-act="close">Got it</button></div>');
+    return;
+  }
+  g.signOut();
+  syncGmail(false, true);
+}
+function disconnectGmail() {
+  const g = P.gmail;
+  if (!g || UI.job) return;
+  const was = ST.gmailEmail;
+  if (g.signOut) g.signOut();
+  ST.gmailLinked = false; ST.gmailEmail = ''; ST.lastSync = 0;
+  commit();
+  toast((was ? was : 'Gmail') + ' disconnected. Items already added stay on your list.');
+}
+async function scanLabel(file) {
+  if (UI.job) return;
+  const box = $('#dlgJob');
+  const ctl = new AbortController();
+  UI.job = { label: 'Reading the date…', ctl };
+  if (box) { box.innerHTML = '<div class="job"><span class="spin" aria-hidden="true"></span><p>Reading the date on the pack…</p><button class="btn text" type="button" id="scanStop">Stop</button></div>'; $('#scanStop').onclick = () => ctl.abort(); }
+  try {
+    const r = await ask(labelPrompt(), { images: [file], signal: ctl.signal, fresh: true });
+    UI.job = null;
+    const name = String((r && r.product_name) || '').trim();
+    const exp = r && validISO(r.expiry_date) ? r.expiry_date : '';
+    UI.labelNote = exp ? 'Read “' + String(r.date_text || '').slice(0, 60) + '” on the pack' + (r.confidence === 'low' ? '. Not certain, so please check it.' : '.') : 'No date found in that photo. ' + (r && r.note ? String(r.note).slice(0, 120) : 'Type it in, or try a closer photo.');
+    if (box) box.innerHTML = '';
+    const f = $('#itemForm');
+    if (f) {
+      if (name) $('#f-name', f).value = name.slice(0, 80);
+      if (CATS.includes(r.category)) $('#f-cat', f).value = r.category;
+      if (STORAGE[r.storage]) $('#f-storage', f).value = r.storage;
+      if (exp) { $('#f-expiry', f).value = exp; $('#f-noexp', f).checked = false; }
+      const hint = $('#f-hint', f); hint.textContent = UI.labelNote; hint.className = exp ? 'hint good' : 'hint';
+    }
+  } catch (e) {
+    UI.job = null; UI.labelNote = '';
+    if (box) box.innerHTML = e && e.code === 'cancelled' ? '' : '<p class="err" role="alert" style="padding-top:8px">' + esc(aiErr(e)) + '</p>';
+  }
+}
+function pickedItems() { return active().filter((i) => UI.pick.has(i.id)); }
+async function suggestRecipe() {
+  if (UI.job) return;
+  const picked = pickedItems();
+  if (!picked.length) return;
+  const rest = active().filter((i) => !UI.pick.has(i.id));
+  const prompt = [
+    'You are the recipe assistant in Grocery Tracker, an Indian family app that cuts food waste.',
+    kitchenContext(),
+    'Meal: ' + (UI.rMeal || 'Any meal') + '. Diet: ' + (UI.rDiet || ST.settings.diet) + ' (strictly follow it; Jain means no onion, garlic, potato or other root vegetables). Servings: ' + (UI.rServ || ST.settings.household) + '. Must take at most ' + (UI.rTime || '30') + ' minutes.',
+    'The cook PICKED these ingredients to use:', inventoryLines(picked),
+    'Everything else at home:', inventoryLines(rest),
+    'What the family usually buys:', radarLines(),
+    'Suggest ONE home-style recipe that uses as many picked ingredients as makes sense, starting with whatever expires soonest. Never use an expired item. Assume only water, salt and basic Indian spices (turmeric, red chilli, cumin, garam masala) are always available; anything else must come from the lists above or be marked "missing".',
+    UI.recipe ? 'Do not suggest "' + UI.recipe.title + '" again; give a different dish.' : '',
+    'Then decide whether the family should order groceries now: say "order" only if the recipe needs missing ingredients OR the food at home will not cover the next 2–3 days of meals for this household; otherwise "no_need". Never tell them to buy something already at home.',
+    'Reply with only JSON: {"title":"","why_this":"one sentence on why this recipe fits","time_minutes":25,"servings":4,"difficulty":"easy","uses_picked":["exact names from the picked list"],"ingredients":[{"item":"","amount":"","status":"have | missing | staple"}],"steps":["short clear steps"],"tip":"one short tip","order_more":{"decision":"order | no_need","headline":"one short line","reason":"1-2 sentences","buy":[{"item":"","amount":"","why":""}],"use_first":["names of items to use first"]}}',
+  ].filter(Boolean).join('\n');
+  startJob('Choosing a recipe from your list…', true);
+  try {
+    const r = await ask(prompt, { signal: UI.job.ctl.signal, fresh: !!UI.recipe });
+    if (!r || !r.title || !Array.isArray(r.steps)) throw { code: 'invalid_json' };
+    UI.recipe = r; endJob();
+  } catch (e) { endJob(aiErr(e)); }
+}
+async function shoppingCheck() {
+  if (UI.job) return;
+  const prompt = [
+    'You are the shopping assistant in Grocery Tracker, an Indian family app that cuts food waste and stops double-buying.',
+    kitchenContext(),
+    'Food at home now:', inventoryLines(active()),
+    'Purchase habits:', radarLines(),
+    'Decide whether the family should order groceries today. Say "order" only if staples or fresh food will run short in the next 2–3 days for this household, or a regularly bought item is due and none is left. Otherwise "no_need". List what to buy (never things already at home and not expiring), what to use first, and items they might be tempted to rebuy but already have.',
+    'Reply with only JSON: {"decision":"order | no_need","headline":"one short line","reason":"1-2 sentences","buy":[{"item":"","amount":"","why":""}],"use_first":["names"],"dont_buy":["names they already have"]}',
+  ].join('\n');
+  startJob('Checking what you have and what you need…', true);
+  try {
+    const r = await ask(prompt, { signal: UI.job.ctl.signal, fresh: true });
+    if (!r || !r.decision) throw { code: 'invalid_json' };
+    UI.shop = r; endJob();
+  } catch (e) { endJob(aiErr(e)); }
+}
+
+/* ---------- event delegation ---------- */
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act]');
+  if (!b) { if (e.target.id === 'sheet') closeSheet(); return; }
+  if (b.dataset.act === 'item' && suppressClick) { suppressClick = false; return; }
+  const a = b.dataset.act, id = b.dataset.id;
+  switch (a) {
+    case 'tab': closeSheet(); go(b.dataset.tab); break;
+    case 'add': openAdd(); break;
+    case 'close': closeSheet(); break;
+    case 'filter': UI.filter = (UI.filter === b.dataset.band || b.dataset.band === 'all') ? 'all' : b.dataset.band; render(); break;
+    case 'item': itemSheet(id); break;
+    case 'used': closeItem(id, 'used'); break;
+    case 'wasted': {
+      const it = ST.items.find((i) => i.id === id);
+      if (it && it.price == null) {
+        $('#sheetExtra').innerHTML = '<form id="wForm" class="form" style="padding-top:8px"><label class="field"><span>What did it cost? (₹, optional)</span><input type="number" id="w-price" inputmode="decimal" min="0" step="any"></label><button class="btn" type="submit" style="align-self:flex-start">Mark as thrown away</button></form>';
+        $('#wForm').onsubmit = (ev) => { ev.preventDefault(); closeItem(id, 'wasted', num($('#w-price').value)); };
+        $('#w-price').focus();
+      } else closeItem(id, 'wasted');
+      break;
+    }
+    case 'edit': openEdit(id); break;
+    case 'delete':
+      $('#sheetExtra').innerHTML = '<div class="stack" style="padding-top:8px"><p class="small">Remove this item? It won’t count as used or thrown away.</p><div style="display:flex;gap:8px"><button class="btn danger" type="button" data-act="delete-yes" data-id="' + id + '">Remove</button><button class="btn text" type="button" data-act="close">Cancel</button></div></div>';
+      break;
+    case 'delete-yes': { const before = snapshot(); ST.items = ST.items.filter((i) => i.id !== id); closeSheet(); commit(); toast('Item removed', before); break; }
+    case 'quick': {
+      const s = shelfFor(b.dataset.name);
+      const f = $('#itemForm'); if (!f || !s) break;
+      $('#f-name', f).value = s[1]; $('#f-cat', f).value = s[2]; $('#f-storage', f).value = s[3]; $('#f-unit', f).value = s[5];
+      $('#f-expiry', f).value = addDays($('#f-purchased', f).value || todayISO(), s[4]); $('#f-noexp', f).checked = false;
+      const hint = $('#f-hint', f); hint.textContent = s[1] + ' usually keeps about ' + pl(s[4], 'day') + ' ' + WHERE[s[3]] + '. Change it if the pack says otherwise.'; hint.className = 'hint';
+      break;
+    }
+    case 'suggest': {
+      const f = b.closest('form');
+      const s = shelfFor($('#f-name', f).value);
+      const hint = $('#f-hint', f);
+      if (s) {
+        $('#f-expiry', f).value = addDays($('#f-purchased', f).value || todayISO(), s[4]); $('#f-noexp', f).checked = false;
+        if (!$('#f-storage', f).dataset.touched) $('#f-storage', f).value = s[3];
+        hint.textContent = s[1] + ' usually keeps about ' + pl(s[4], 'day') + '. Use the printed date if the pack has one.'; hint.className = 'hint good';
+      } else { hint.textContent = 'No typical date for that item. Use the date on the pack, or tick “No reliable date”.'; hint.className = 'hint'; }
+      break;
+    }
+    case 'load-audit': {
+      const before = snapshot(); const t = todayISO();
+      AUDIT.forEach((a2) => ST.items.push(makeItem({ name: a2[0], category: a2[1], storage: a2[2], expiry: addDays(t, a2[3]), qty: a2[4], unit: a2[5], price: a2[6], purchased: t, sample: true, expirySource: 'manual' })));
+      UI.tab = 'fridge'; UI.filter = 'all'; commit(); window.scrollTo({ top: 0 }); toast('Added 9 sample items from the fridge audit', before);
+      break;
+    }
+    case 'clear-samples': { const before = snapshot(); ST.items = ST.items.filter((i) => !i.sample); commit(); toast('Sample items removed', before); break; }
+    case 'cook-soon': UI.pick = new Set(active().filter((i) => band(i) === 'week').map((i) => i.id)); UI.recipe = null; go('recipes'); break;
+    case 'sync': syncGmail(false); break;
+    case 'gmail-change': changeGmail(); break;
+    case 'gmail-off': disconnectGmail(); break;
+    case 'sample-sync': sampleSync(); break;
+    case 'paste-run': pasteRun(); break;
+    case 'stop': if (UI.job && UI.job.ctl) UI.job.ctl.abort(); break;
+    case 'clear-log': ST.imports = []; commit(); break;
+    case 'log-remove': { const before = snapshot(); ST.items = ST.items.filter((i) => i.id !== id); commit(); toast('Removed from your list', before); break; }
+    case 'log-add': {
+      const L = ST.imports.find((x) => x.id === b.dataset.log); const x = L && L.items[+b.dataset.k];
+      if (!x) break;
+      const before = snapshot();
+      const it = makeItem({ name: x.name, category: x.category, qty: x.qty, unit: x.unit, storage: x.storage, price: x.price, purchased: x.purchased, store: x.store, expiry: null, source: 'order' });
+      ST.items.push(it); x.grocery = true; x.itemId = it.id; commit(); toast(x.name + ' added. Set its date from your list.', before);
+      break;
+    }
+    case 'pick': if (UI.pick.has(id)) UI.pick.delete(id); else UI.pick.add(id); render(); break;
+    case 'pick-soon': UI.pick = new Set(active().filter((i) => { const d = daysLeft(i); return d !== null && d >= 0 && d <= 7; }).map((i) => i.id)); if (!UI.pick.size) toast('Nothing expires this week. Pick ingredients yourself.'); render(); break;
+    case 'pick-none': UI.pick.clear(); render(); break;
+    case 'recipe': suggestRecipe(); break;
+    case 'shop': shoppingCheck(); break;
+    case 'cooked': {
+      const R = UI.recipe; if (!R) break;
+      const names = (R.uses_picked || []).map((n) => String(n).toLowerCase());
+      const hit = pickedItems().filter((i) => names.some((n) => n && (i.name.toLowerCase().includes(n) || n.includes(i.name.toLowerCase()))));
+      const list = hit.length ? hit : pickedItems();
+      const before = snapshot();
+      list.forEach((i) => { i.status = 'used'; i.closedAt = Date.now(); UI.pick.delete(i.id); });
+      UI.recipe = null; commit(); toast(pl(list.length, 'item') + ' marked as used', before);
+      break;
+    }
+    case 'copy': {
+      const text = b.dataset.text || '';
+      try { navigator.clipboard.writeText(text).then(() => toast('Shopping list copied'), () => showCopy(b, text)); } catch (err) { showCopy(b, text); }
+      break;
+    }
+    case 'downgrade': ST.plan = 'free'; ST.planInfo = null; commit(); toast('Switched to the Free plan'); break;
+    case 'wipe': $('#wipeConfirm').innerHTML = '<div class="stack" style="padding-block:8px"><p class="small">Remove every item, the import history and your settings?</p><div style="display:flex;gap:8px"><button class="btn danger" type="button" data-act="wipe-yes">Clear everything</button><button class="btn text" type="button" data-act="wipe-no">Cancel</button></div></div>'; break;
+    case 'wipe-no': $('#wipeConfirm').innerHTML = ''; break;
+    case 'wipe-yes': { const before = snapshot(); const plan = ST.plan, info = ST.planInfo; ST = DEFAULT(); ST.plan = plan; ST.planInfo = info; UI.pick.clear(); UI.recipe = null; UI.shop = null; commit(); toast('Everything cleared', before); break; }
+  }
+});
+function showCopy(btn, text) {
+  const ta = document.createElement('textarea'); ta.className = 'copybox'; ta.value = text; ta.readOnly = true;
+  btn.replaceWith(ta); ta.focus(); ta.select();
+  toast('Select the text and copy it');
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#sheet').hidden) closeSheet(); });
+document.addEventListener('change', (e) => { if (e.target && e.target.id === 'f-storage') e.target.dataset.touched = '1'; });
+
+/* press and hold an item to open its actions (the team's design), with a short buzz where supported */
+let pressT = null, pressXY = null, suppressClick = false;
+document.addEventListener('pointerdown', (e) => {
+  const row = e.target.closest('.it'); if (!row) return;
+  pressXY = [e.clientX, e.clientY];
+  pressT = setTimeout(() => { pressT = null; suppressClick = true; try { navigator.vibrate && navigator.vibrate(18); } catch (err) {} itemSheet(row.dataset.id); }, 480);
+});
+const cancelPress = (e) => { if (pressT && (!e || e.type !== 'pointermove' || Math.hypot(e.clientX - pressXY[0], e.clientY - pressXY[1]) > 10)) { clearTimeout(pressT); pressT = null; } };
+['pointerup', 'pointercancel', 'pointerleave', 'pointermove'].forEach((t) => document.addEventListener(t, cancelPress, { passive: true }));
+document.addEventListener('contextmenu', (e) => { if (e.target.closest('.it')) e.preventDefault(); });
+
+/* ---------- boot ---------- */
+async function boot() {
+  renderTabs();
+  try { await P.init(); } catch (e) {}
+  let saved = null;
+  try { saved = await P.load(); } catch (e) {}
+  ST = migrate(saved);
+  if (UI.tab === 'add') UI.tab = 'fridge';
+  UI.ready = true;
+  const shared = P.sharedText ? P.sharedText() : '';
+  if (shared) { UI.tab = 'orders'; UI.paste = shared; }
+  render();
+  if (shared && isPaid()) pasteRun(shared, true);
+  const soon = active().filter((i) => band(i) === 'week' || band(i) === 'expired');
+  const today = todayISO();
+  if (P.notify && ST.settings.remind && soon.length && ST.lastPing !== today) {
+    P.notify.show('Use soon: ' + soon.slice(0, 3).map((i) => i.name).join(', '), pl(soon.length, 'item') + ' need using this week or are past their date.');
+    ST.lastPing = today; commit({ render: false });
+  }
+  if (isPaid() && ST.settings.autoSync && ST.gmailLinked && P.gmail && P.gmail.available() && Date.now() - (ST.lastSync || 0) > 3 * 3600e3) {
+    setTimeout(() => syncGmail(true), 1200);
+  }
+}
+boot();
+})();
+
+</script>
+</body>
+</html>
