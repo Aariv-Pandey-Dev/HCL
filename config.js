@@ -6,7 +6,7 @@
 window.GT_CONFIG = {
   // Step 3 of the guide: Firebase console → Project settings → Your apps → Web app → "Config"
   firebase: {
-    apiKey: "AIzaSyDa-9NiLcRT1PyYFsvdbP60u4KvxhzVAD",
+    apiKey: "AIzaSyDa-9NiLcRT1PyYFsvdbP60u4KvxhzVAD4",
     authDomain: "hcl-grocery-tracker.firebaseapp.com",
     projectId: "hcl-grocery-tracker",
     storageBucket: "hcl-grocery-tracker.firebasestorage.app",
