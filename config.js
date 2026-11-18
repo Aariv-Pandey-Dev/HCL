@@ -15,7 +15,7 @@ window.GT_CONFIG = {
   },
 
   // The Gemini model the AI assistant uses. gemini-3.5-flash is stable until at least May 2027.
-  geminiModel: "gemini-3.5-flash",
+  geminiModel: "gemini-3.8-flash",
 
   // Step 3 (optional but recommended): reCAPTCHA v3 site key for Firebase App Check. Leave "" to skip.
   recaptchaSiteKey: "",
