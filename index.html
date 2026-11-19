@@ -343,9 +343,13 @@ window.Platform = (function () {
       try {
         const F = window.GTFirebase;
         const app = F.initializeApp(CFG.firebase);
-        if (CFG.recaptchaSiteKey) F.initializeAppCheck(app, { provider: new F.ReCaptchaV3Provider(CFG.recaptchaSiteKey), isTokenAutoRefreshEnabled: true });
+        if (CFG.recaptchaSiteKey) {
+          // reCAPTCHA Classic (v3) keys are deprecated, so keys made in Google Cloud (Enterprise) are the default.
+          const Prov = CFG.recaptchaProvider === 'v3' ? F.ReCaptchaV3Provider : F.ReCaptchaEnterpriseProvider;
+          F.initializeAppCheck(app, { provider: new Prov(CFG.recaptchaSiteKey), isTokenAutoRefreshEnabled: true });
+        }
         const ai = F.getAI(app, { backend: new F.GoogleAIBackend() });
-        model = F.getGenerativeModel(ai, { model: CFG.geminiModel || 'gemini-3.5-flash', generationConfig: { responseMimeType: 'application/json', temperature: 0.4 } });
+        model = F.getGenerativeModel(ai, { model: CFG.geminiModel || 'gemini-3.8-flash', generationConfig: { responseMimeType: 'application/json', temperature: 0.4 } });
       } catch (e) { aiError = String(e && e.message || e); model = null; }
     }
     if (CFG.googleClientId) loadGIS().catch(() => {});
