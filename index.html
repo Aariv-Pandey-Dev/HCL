@@ -394,8 +394,20 @@ window.Platform = (function () {
       if (o && o.images) for (const f of Array.from(o.images)) parts.push({ inlineData: { mimeType: 'image/jpeg', data: await shrink(f) } });
       if (o && o.signal && o.signal.aborted) throw { code: 'cancelled' };
       let res;
-      try { res = await model.generateContent(parts); }
+      // Google sometimes answers 500/503 "high demand". That is temporary, so try again a few times before giving up.
+      const busy = (m) => /\b(500|503)\b|high demand|overloaded|UNAVAILABLE/i.test(m);
+      try {
+        for (let n = 0; ; n++) {
+          try { res = await model.generateContent(parts); break; }
+          catch (e) {
+            if (n >= 3 || !busy(String(e && e.message || e))) throw e;
+            await new Promise((r) => setTimeout(r, 2500 * (n + 1)));
+            if (o && o.signal && o.signal.aborted) throw { code: 'cancelled' };
+          }
+        }
+      }
       catch (e) {
+        if (e && e.code === 'cancelled') throw e;
         const msg = String(e && e.message || e);
         if (/quota|429|RESOURCE_EXHAUSTED/i.test(msg)) throw { code: 'rate_limited' };
         if (/app.?check|403|PERMISSION_DENIED/i.test(msg)) throw { code: 'gemini_error', message: 'access denied. Full error from Google: ' + msg };
