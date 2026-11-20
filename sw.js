@@ -1,5 +1,5 @@
 /* Grocery Tracker service worker: keeps the app working offline. Change VERSION whenever you upload new app files. */
-const VERSION = 'gt-v2';
+const VERSION = 'gt-v3';
 const SHELL = ['./', './index.html', './config.js', './firebase-ai.js', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (e) => {
@@ -20,7 +20,7 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   // Settings file: always try the live copy first, so new keys in config.js reach phones straight away.
-  if (url.origin === location.origin && url.pathname.endsWith('/config.js')) {
+  if (url.origin === location.origin && /\/(config|firebase-ai)\.js$/.test(url.pathname)) {
     e.respondWith(fetch(req).then((r) => { const copy = r.clone(); caches.open(VERSION).then((c) => c.put(req, copy)); return r; }).catch(() => caches.match(req)));
     return;
   }
