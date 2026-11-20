@@ -18,7 +18,7 @@ window.GT_CONFIG = {
   geminiModel: "gemini-3.8-flash",
 
   // Step 3 (optional but recommended): reCAPTCHA v3 site key for Firebase App Check. Leave "" to skip.
-  recaptchaSiteKey: "",
+  recaptchaSiteKey: "6Ld9jSkuAAAAALnvWQszKIIHCkmzzn9y1G4zkQeX",
 
   // Step 4: Google Cloud → APIs & Services → Credentials → OAuth client ID (Web application). Leave "" to hide email import.
   googleClientId: ""
