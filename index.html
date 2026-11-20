@@ -398,8 +398,8 @@ window.Platform = (function () {
       catch (e) {
         const msg = String(e && e.message || e);
         if (/quota|429|RESOURCE_EXHAUSTED/i.test(msg)) throw { code: 'rate_limited' };
-        if (/app.?check|403|PERMISSION_DENIED/i.test(msg)) throw { code: 'gemini_error', message: 'access denied — check App Check and the API key restrictions (setup guide, step 3).' };
-        throw { code: 'gemini_error', message: msg.slice(0, 160) };
+        if (/app.?check|403|PERMISSION_DENIED/i.test(msg)) throw { code: 'gemini_error', message: 'access denied. Full error from Google: ' + msg };
+        throw { code: 'gemini_error', message: msg };
       }
       if (o && o.signal && o.signal.aborted) throw { code: 'cancelled' };
       return parseJSON(res.response.text());
