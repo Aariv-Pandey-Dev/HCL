@@ -14,12 +14,15 @@ window.GT_CONFIG = {
     appId: "1:877707169019:web:37cc78512b64de5741f45e"
   },
 
-  // The Gemini model the AI assistant uses. gemini-3.5-flash is stable until at least May 2027.
+  // The Gemini model the AI assistant uses.
   geminiModel: "gemini-3.8-flash",
 
-  // Step 3 (optional but recommended): reCAPTCHA v3 site key for Firebase App Check. Leave "" to skip.
-  recaptchaSiteKey: "6LfgtSkuAAAAAKwVASVVD253rSSxcRMY79MHt6Vi",
+  // Used automatically if the main model is busy or times out. Set to "" to turn off.
+  fallbackModel: "gemini-3.5-flash-lite",
 
-  // Step 4: Google Cloud → APIs & Services → Credentials → OAuth client ID (Web application). Leave "" to hide email import.
+  // reCAPTCHA Enterprise site key for Firebase App Check (made in Google Cloud).
+  recaptchaSiteKey: "6Ld9jSkuAAAAALnvWQszKIIHCkmzzn9y1G4zkQeX",
+
+  // Gmail import: Google Cloud → APIs & Services → Credentials → OAuth client ID (Web application).
   googleClientId: "877707169019-ags7i4u8krrj8qb691osm4hutpv75pi5.apps.googleusercontent.com"
 };
