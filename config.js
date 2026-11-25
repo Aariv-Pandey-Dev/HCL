@@ -21,5 +21,5 @@ window.GT_CONFIG = {
   recaptchaSiteKey: "6LfgtSkuAAAAAKwVASVVD253rSSxcRMY79MHt6Vi",
 
   // Step 4: Google Cloud → APIs & Services → Credentials → OAuth client ID (Web application). Leave "" to hide email import.
-  googleClientId: ""
+  googleClientId: "877707169019-ags7i4u8krrj8qb691osm4hutpv75pi5.apps.googleusercontent.com"
 };
