@@ -21,7 +21,7 @@ window.GT_CONFIG = {
   fallbackModel: "gemini-3.5-flash-lite",
 
   // reCAPTCHA Enterprise site key for Firebase App Check (made in Google Cloud).
-  recaptchaSiteKey: "6Ld9jSkuAAAAALnvWQszKIIHCkmzzn9y1G4zkQeX",
+  recaptchaSiteKey: "6LfgtSkuAAAAAKwVASVVD253rSSxcRMY79MHt6Vi",
 
   // Gmail import: Google Cloud → APIs & Services → Credentials → OAuth client ID (Web application).
   googleClientId: "877707169019-ags7i4u8krrj8qb691osm4hutpv75pi5.apps.googleusercontent.com"
